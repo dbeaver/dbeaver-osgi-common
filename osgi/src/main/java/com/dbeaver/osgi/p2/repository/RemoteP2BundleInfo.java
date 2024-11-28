@@ -222,6 +222,10 @@ public class RemoteP2BundleInfo extends BundleInfo {
             );
         }
 
+        public String getBundleName() {
+            return bundleName;
+        }
+
         public RemoteBundleInfoBuilder addReexportedBundle(String reexportedBundle) {
             this.reexportedBundles.add(reexportedBundle);
             return this;

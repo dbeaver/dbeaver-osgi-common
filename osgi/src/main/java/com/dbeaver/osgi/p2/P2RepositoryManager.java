@@ -20,6 +20,7 @@ import com.dbeaver.osgi.p2.repository.IRepository;
 import com.dbeaver.osgi.p2.repository.exception.RepositoryInitialisationError;
 import com.dbeaver.osgi.p2.repository.RemoteP2BundleInfo;
 import com.dbeaver.osgi.p2.repository.RemoteP2Repository;
+import com.dbeaver.osgi.xml.ContentParserXmlExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class P2RepositoryManager {
     private List<IRepository<?>> rootRepositories;
     private final P2BundleLookupCache cache = new P2BundleLookupCache();
 
-    public void init(Properties settings, String eclipseVersion) throws RepositoryInitialisationError {
+    public void init(Properties settings, String eclipseVersion, ContentParserXmlExtension extension) throws RepositoryInitialisationError {
         String repositoriesString = (String) settings.get("repositories");
         String reposititoryString = repositoriesString.replace(
             "${eclipse-version}",
@@ -44,7 +45,7 @@ public class P2RepositoryManager {
         indexRepositories(repositories);
         for (IRepository<?> repository : rootRepositories) {
             log.info("Indexing " + repository.getName() + " repository...");
-            repository.init(cache);
+            repository.init(cache, extension);
         }
     }
 

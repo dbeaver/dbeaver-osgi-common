@@ -37,6 +37,11 @@ public class P2BundleLookupCache {
         return remoteBundlesByNames.get(name);
     }
 
+    public RemoteP2BundleInfo getRemoteBundleByNameAndVersion(String name, String version) {
+        return remoteBundlesByExports.get(name).stream().filter(it -> it.getBundleVersion().equals(version)).findFirst()
+            .orElse(null);
+    }
+
     public Collection<RemoteP2Feature> getRemoteFeaturesByName(String name) {
         return remoteFeaturesByNames.get(name);
     }

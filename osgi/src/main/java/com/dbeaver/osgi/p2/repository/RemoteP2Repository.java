@@ -25,6 +25,7 @@ import com.dbeaver.osgi.Artifact;
 import com.dbeaver.osgi.PathsManager;
 import com.dbeaver.osgi.util.FileUtils;
 import com.dbeaver.osgi.xml.ContentFileHandler;
+import com.dbeaver.osgi.xml.ContentParserXmlExtension;
 import com.dbeaver.osgi.xml.IndexFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,9 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
         return url.toString();
     }
 
+    public URL getUrl() {
+        return url;
+    }
 
     public boolean isIndexed(String id, String version) {
         for (Artifact indexedArtifact : indexedArtifacts) {
@@ -119,7 +123,7 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
 
 
     @Override
-    public void init(P2BundleLookupCache cache) throws RepositoryInitialisationError {
+    public void init(P2BundleLookupCache cache, ContentParserXmlExtension extension) throws RepositoryInitialisationError {
         Path compositeJar, compositeXML;
         compositeJar = fileCache.lookInRepositoryCache("compositeArtifacts.jar");
         compositeXML = fileCache.lookInRepositoryCache("compositeArtifacts.xml");
@@ -137,17 +141,17 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
                     RemoteP2Repository childP2repository = new RemoteP2Repository(url.toURI().resolve(childrenURL + "/").toURL());
                     subRepositories.add(childP2repository);
                     log.info("Indexing " + childP2repository.getName() + " sub repository...");
-                    childP2repository.init(cache);
+                    childP2repository.init(cache, extension);
                 }
             } else if (compositeXML != null) {
                 List<String> childrenURLs = IndexFileParser.INSTANCE.listChildrenRepositoriesFromFile(compositeXML.toFile());
                 for (String childrenURL : childrenURLs) {
                     RemoteP2Repository childP2repository = new RemoteP2Repository(url.toURI().resolve(childrenURL + "/").toURL());
                     subRepositories.add(childP2repository);
-                    childP2repository.init(cache);
+                    childP2repository.init(cache, extension);
                 }
             } else {
-                loadArtifacts(cache);
+                loadArtifacts(cache, extension);
             }
         } catch (Exception exception) {
             throw new RepositoryInitialisationError("Error during" + getName() + " repository initialisation", exception);
@@ -198,7 +202,7 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
         }
     }
 
-    private void loadArtifacts(P2BundleLookupCache cache) throws RepositoryInitialisationError {
+    private void loadArtifacts(P2BundleLookupCache cache, ContentParserXmlExtension extension) throws RepositoryInitialisationError {
         try {
             Path artifactsIndexPath = fileCache.lookInRepositoryCache("artifacts.jar");
             if (artifactsIndexPath == null) {
@@ -215,7 +219,7 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
             }
             if (contentPath != null) {
                 Path contentsXMl = FileUtils.extractConfigFromJar(contentPath, "content.xml");
-                ContentFileHandler.indexContent(this, contentsXMl.toFile(), cache);
+                ContentFileHandler.indexContent(this, contentsXMl.toFile(), cache, extension);
                 log.info("Repository " + getName() + " indexed, " +
                     (remoteP2BundleInfoSet.size() + remoteP2FeatureSet.size()) + " artifacts found");
             }

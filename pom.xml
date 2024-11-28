@@ -15,7 +15,6 @@
     <version>1.0.0-SNAPSHOT</version>
     <modules>
         <module>osgi</module>
-        <module>../cyclonedx-osgi-bom-producer</module>
     </modules>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

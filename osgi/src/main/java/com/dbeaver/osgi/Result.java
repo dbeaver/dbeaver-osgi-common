@@ -148,6 +148,10 @@ public class Result {
         this.productPath = productPath;
     }
 
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
     public void setProductInfo(String productName, String uid, String id, String application) {
         this.productName = productName.replaceAll("\\s+", "");
         this.productUID = uid;

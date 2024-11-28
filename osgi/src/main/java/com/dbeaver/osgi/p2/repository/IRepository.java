@@ -20,6 +20,7 @@ package com.dbeaver.osgi.p2.repository;
 import com.dbeaver.osgi.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.BundleInfo;
 import com.dbeaver.osgi.p2.repository.exception.RepositoryInitialisationError;
+import com.dbeaver.osgi.xml.ContentParserXmlExtension;
 
 import java.nio.file.Path;
 
@@ -28,6 +29,6 @@ public interface IRepository<BUNDLE extends BundleInfo> {
 
     Path resolveBundle(BUNDLE bundleInfo);
 
-    void init(P2BundleLookupCache cache) throws RepositoryInitialisationError;
+    void init(P2BundleLookupCache cache, ContentParserXmlExtension extension) throws RepositoryInitialisationError;
 
 }

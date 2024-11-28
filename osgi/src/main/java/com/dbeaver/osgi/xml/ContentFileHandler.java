@@ -25,6 +25,7 @@ import com.dbeaver.osgi.p2.repository.RemoteP2Repository;
 import com.dbeaver.osgi.util.DependencyInformation;
 import com.dbeaver.osgi.util.Version;
 import com.dbeaver.osgi.util.VersionRange;
+import org.jkiss.code.Nullable;
 import org.jkiss.utils.CommonUtils;
 import org.jkiss.utils.Pair;
 import org.xml.sax.Attributes;
@@ -48,6 +49,7 @@ public class ContentFileHandler extends DefaultHandler {
 
     private final RemoteP2Repository repository;
     private final P2BundleLookupCache cache;
+    private final ContentParserXmlExtension extension;
     private RemoteP2BundleInfo.RemoteBundleInfoBuilder currentBundle;
     private Pair<DependencyInformation, DependencyType> currentDependency;
 
@@ -62,12 +64,13 @@ public class ContentFileHandler extends DefaultHandler {
     public static void indexContent(
             @NotNull RemoteP2Repository repository,
             @NotNull File contentFile,
-            @NotNull P2BundleLookupCache cache
+            @NotNull P2BundleLookupCache cache,
+            @Nullable ContentParserXmlExtension extension
     ) throws IOException, SAXException, ParserConfigurationException {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         SAXParser saxParser = factory.newSAXParser();
-        ContentFileHandler contentFileHandler = new ContentFileHandler(repository, cache);
+        ContentFileHandler contentFileHandler = new ContentFileHandler(repository, cache, extension);
         saxParser.parse(contentFile, contentFileHandler);
         repository.addRemoteBundles(contentFileHandler.remoteP2BundleInfos);
         repository.addRemoteFeatures(contentFileHandler.remoteP2Features);
@@ -86,7 +89,10 @@ public class ContentFileHandler extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qualifiedName, Attributes attributes) throws SAXException {
-         if (ContentFileConstants.UNIT_KEYWORD.equalsIgnoreCase(qualifiedName)) {
+        if (extension != null) {
+            extension.startElement(uri, localName, qualifiedName, attributes, currentState, currentUnit);
+        }
+        if (ContentFileConstants.UNIT_KEYWORD.equalsIgnoreCase(qualifiedName)) {
             currentState = ParserState.PLUGIN_VALID;
             String id = attributes.getValue(ContentFileConstants.ID_FIELD);
             String version = attributes.getValue(ContentFileConstants.VERSION_FIELD);
@@ -177,6 +183,9 @@ public class ContentFileHandler extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName, String qualifiedName) throws SAXException {
+        if (extension != null) {
+            extension.endElement(uri, localName, qualifiedName, currentState, currentUnit);
+        }
         if (currentState.isInsideUnit() && ContentFileConstants.UNIT_KEYWORD.equalsIgnoreCase(qualifiedName)) {
             if (currentState != ParserState.UNIT_INVALID) {
                 if (currentState.isPluginOrComment()) {
@@ -262,7 +271,6 @@ public class ContentFileHandler extends DefaultHandler {
                 currentState = currentState.isInsideDependency() ? ParserState.DEPENDENCY_INVALID : ParserState.UNIT_INVALID;
             }
         }
-
         super.characters(ch, start, length);
     }
 
@@ -274,13 +282,14 @@ public class ContentFileHandler extends DefaultHandler {
         return matcher.group(1);
     }
 
-    private ContentFileHandler(RemoteP2Repository repository, P2BundleLookupCache cache) {
+    private ContentFileHandler(RemoteP2Repository repository, P2BundleLookupCache cache, @Nullable ContentParserXmlExtension extension) {
         this.repository = repository;
         this.cache = cache;
+        this.extension = extension;
     }
 
 
-    private enum ParserState {
+    public enum ParserState {
         ROOT, // ROOT -> FEATURE_VALID | PLUGIN_VALID
         FEATURE_VALID, // FEATURE_VALID -> UNIT_INVALID | ROOT
         PLUGIN_VALID, // PLUGIN_VALID -> UNIT_INVALID | DEPENDENCY
@@ -289,24 +298,24 @@ public class ContentFileHandler extends DefaultHandler {
         DEPENDENCY_INVALID, // DEPENDENCY_INVALID -> PLUGIN_VALID
         UNIT_INVALID; // UNIT_INVALID -> ROOT
 
-        private boolean isInsideDependency() {
+        public boolean isInsideDependency() {
             return this.equals(DEPENDENCY) || this.equals(DEPENDENCY_INVALID);
         }
 
-        private boolean isInsideUnit() {
+        public boolean isInsideUnit() {
             return this.equals(FEATURE_VALID) || isPluginOrComment()|| this.equals(UNIT_INVALID);
         }
 
-        private boolean isPluginOrComment() {
+        public boolean isPluginOrComment() {
             return this.equals(PLUGIN_VALID) || this.equals(SOURCES_VALID);
         }
 
-        private boolean isInvalid() {
+        public boolean isInvalid() {
             return this.equals(DEPENDENCY_INVALID) || this.equals(UNIT_INVALID);
         }
     }
 
-    private record UnitInformation(String id, String version) {
+    public record UnitInformation(String id, String version) {
     }
 
     private enum DependencyType {
