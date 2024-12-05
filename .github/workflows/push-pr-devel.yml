@@ -15,7 +15,7 @@ jobs:
     name: Check
     secrets: inherit
     with:
-      project-directory: ./dbeaver-osgi-common/osgi/aggregate
+      project-directory: ./dbeaver-osgi-common/osgi.dependency.processing/aggregate
       project-deps: ./dbeaver-osgi-common/project.deps
       timeout-minutes: 2
 
