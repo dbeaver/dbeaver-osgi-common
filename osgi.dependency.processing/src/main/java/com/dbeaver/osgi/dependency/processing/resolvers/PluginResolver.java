@@ -16,10 +16,7 @@
  */
 package com.dbeaver.osgi.dependency.processing.resolvers;
 
-import com.dbeaver.osgi.dependency.processing.BundleInfo;
-import com.dbeaver.osgi.dependency.processing.FeatureInfo;
-import com.dbeaver.osgi.dependency.processing.PathsManager;
-import com.dbeaver.osgi.dependency.processing.Result;
+import com.dbeaver.osgi.dependency.processing.*;
 import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.P2RepositoryManager;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
@@ -70,19 +67,19 @@ public class PluginResolver {
             graph.addCurrentNodeDependency(previousParsedBundle.getBundleName());
             if (previousParsedBundle.getStartLevel() == null && startLevel != null) {
                 // if previousParsedBundle does not have 'startLevel' — update it
-                var newParsedBundle = new BundleInfo(
-                    previousParsedBundle.getPath(),
-                    previousParsedBundle.getBundleName(),
-                    previousParsedBundle.getBundleVersion(),
-                    previousParsedBundle.getClasspathLibs(),
-                    previousParsedBundle.getRequireBundles(),
-                    previousParsedBundle.getReexportedBundles(),
-                    previousParsedBundle.getExportPackages(),
-                    previousParsedBundle.getImportPackages(),
-                    previousParsedBundle.getRequireFragments(),
-                    previousParsedBundle.getFragmentHost(),
-                    startLevel
-                );
+                var newParsedBundle = new BundleInfoBuilder().setPath(previousParsedBundle.getPath())
+                    .setBundleName(previousParsedBundle.getBundleName())
+                    .setBundleVersion(previousParsedBundle.getBundleVersion())
+                    .setClasspathLibs(previousParsedBundle.getClasspathLibs())
+                    .setRequireBundles(previousParsedBundle.getRequireBundles())
+                    .setReexportedBundles(previousParsedBundle.getReexportedBundles())
+                    .setExportPackages(previousParsedBundle.getExportPackages())
+                    .setImportPackages(previousParsedBundle.getImportPackages())
+                    .setRequiredFragments(previousParsedBundle.getRequireFragments())
+                    .setFragmentHost(previousParsedBundle.getFragmentHost())
+                    .setStartLevel(startLevel)
+                    .setRequiredExecutionEnvironment(previousParsedBundle.getRequiredJava())
+                    .createBundleInfo();
                 result.addBundle(newParsedBundle);
             }
             return;

@@ -70,7 +70,8 @@ public class RemoteP2BundleInfo extends BundleInfo {
             importPackages,
             List.of(),
             null,
-            startLevel
+            startLevel,
+            null
         );
         this.repository = repositoryURL;
         this.zipped = zipped;
