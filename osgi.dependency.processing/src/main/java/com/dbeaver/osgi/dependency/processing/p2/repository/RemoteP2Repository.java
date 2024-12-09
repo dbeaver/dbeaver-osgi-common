@@ -125,16 +125,21 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
     @Override
     public void init(P2BundleLookupCache cache, ContentParserXmlExtension extension) throws RepositoryInitialisationError {
         Path compositeJar, compositeXML;
+        log.debug("Looking for an existing compositeArtifacts.jar");
         compositeJar = fileCache.lookInRepositoryCache("compositeArtifacts.jar");
+        log.debug("Looking for an existing compositeArtifacts.xml");
         compositeXML = fileCache.lookInRepositoryCache("compositeArtifacts.xml");
         try {
             if (compositeJar == null && compositeXML == null) {
                 URI compositeArtifactJarURI = url.toURI().resolve("compositeArtifacts.jar");
                 URI compositeArtifactJarXML = url.toURI().resolve("compositeArtifacts.xml");
+                log.debug("Trying to download compositeArtifacts.jar");
                 compositeJar = FileUtils.tryToDownloadFile(compositeArtifactJarURI, fileCache.getCacheFilePath("compositeArtifacts.jar"), true);
+                log.debug("Trying to download compositeArtifacts.xml");
                 compositeXML = FileUtils.tryToDownloadFile(compositeArtifactJarXML, fileCache.getCacheFilePath("compositeArtifacts.xml"), true);
             }
             if (compositeJar != null) {
+                log.debug("Composite jar found, extracting content...");
                 Path path = FileUtils.extractConfigFromJar(compositeJar, "compositeArtifacts.xml");
                 List<String> childrenURLs = IndexFileParser.INSTANCE.listChildrenRepositoriesFromFile(path.toFile());
                 for (String childrenURL : childrenURLs) {
@@ -144,6 +149,7 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
                     childP2repository.init(cache, extension);
                 }
             } else if (compositeXML != null) {
+                log.debug("Composite xml found, extracting content...");
                 List<String> childrenURLs = IndexFileParser.INSTANCE.listChildrenRepositoriesFromFile(compositeXML.toFile());
                 for (String childrenURL : childrenURLs) {
                     RemoteP2Repository childP2repository = new RemoteP2Repository(url.toURI().resolve(childrenURL + "/").toURL());
@@ -151,6 +157,7 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
                     childP2repository.init(cache, extension);
                 }
             } else {
+                log.debug("Loading artifacts...");
                 loadArtifacts(cache, extension);
             }
         } catch (Exception exception) {
@@ -204,20 +211,26 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
 
     private void loadArtifacts(P2BundleLookupCache cache, ContentParserXmlExtension extension) throws RepositoryInitialisationError {
         try {
+            log.debug("Looking for existing artifacts.jar...");
             Path artifactsIndexPath = fileCache.lookInRepositoryCache("artifacts.jar");
             if (artifactsIndexPath == null) {
+                log.debug("Valid artifacts.jar not found, downloading it from the repository...");
                 URI artifactsURI = url.toURI().resolve("artifacts.jar");
                 artifactsIndexPath = FileUtils.tryToDownloadFile(artifactsURI, fileCache.getCacheFilePath("artifacts.jar"), true);
             }
             if (artifactsIndexPath != null) {
+                log.debug("Indexing artifacts...");
                 indexArtifacts(artifactsIndexPath);
             }
+            log.debug("Looking for existing content.jar...");
             Path contentPath = fileCache.lookInRepositoryCache("content.jar");
             if (contentPath == null) {
+                log.debug("Valid content.jar not found, downloading it from the repository...");
                 URI contentsURI = url.toURI().resolve("content.jar");
                 contentPath = FileUtils.tryToDownloadFile(contentsURI, fileCache.getCacheFilePath("content.jar"), true);
             }
             if (contentPath != null) {
+                log.debug("Indexing contents...");
                 Path contentsXMl = FileUtils.extractConfigFromJar(contentPath, "content.xml");
                 ContentFileHandler.indexContent(this, contentsXMl.toFile(), cache, extension);
                 log.info("Repository " + getName() + " indexed, " +
