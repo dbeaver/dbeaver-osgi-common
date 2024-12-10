@@ -36,5 +36,6 @@ public class ConfigurationConstants {
     public static final String TREE_OUTPUT = "tree-output";
 
     public static final String FEATURES_FOLDER = "features";
-    public static final Object TEST_LIBRARIES = "testLibraries";
+    public static final String TEST_LIBRARIES = "testLibraries";
+    public static final String ASSOCIATED_PROPERTIES = "associateProperties";
 }

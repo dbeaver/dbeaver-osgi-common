@@ -36,6 +36,9 @@ public enum PathsManager {
     private Map<Path, String> productsPathsAndWorkDirs;
     private Collection<Path> testBundlesPaths;
 
+    private Map<String, Set<String>> associatedProperties;
+
+    private Map<String, Map<String, String>> propertyArray = new LinkedHashMap<>();
 
     private Path eclipsePath;
     private Path eclipsePluginsPath;
@@ -141,6 +144,19 @@ public enum PathsManager {
                 .map(projectsFolderPath::resolve).collect(Collectors.toSet());
             modulesRoots.addAll(additionalModuleRoots);
         }
+        String associatedPropertiesObject = settings.getProperty(ConfigurationConstants.ASSOCIATED_PROPERTIES);
+        if (associatedPropertiesObject != null) {
+            Stream<String> propertyStream = Arrays.stream(associatedPropertiesObject.split(";"))
+                .filter(it -> it.split("=").length == 2).map(String::trim);
+            this.associatedProperties = propertyStream.peek(productProperties -> {
+                    String values = productProperties.split("=")[1];
+                    Set<String> valuesSet = getSet(values);
+                    for (String s : valuesSet) {
+                        propertyArray.computeIfAbsent(s, prop -> loadNewProperty(prop, settings));
+                    }
+                }
+            ).collect(Collectors.toMap(it -> it.split("=")[0], it -> getSet(it.split("=")[1])));
+        }
         excludePaths = new LinkedHashSet<>();
         String excludePathsString = (String) settings.get(ConfigurationConstants.EXCLUDED_OUTPUT_PARAM);
         if (excludePathsString != null) {
@@ -180,6 +196,28 @@ public enum PathsManager {
         this.projectsFolderPath = projectsFolderPath;
     }
 
+    @NotNull
+    private static Set<String> getSet(String values) {
+        Set<String> valuesSet = new LinkedHashSet<>();
+        if (values.contains(",")) {
+            valuesSet.addAll(List.of(values.split(",")));
+        } else {
+            valuesSet.add(values);
+        }
+        return valuesSet;
+    }
+
+    private Map<String, String> loadNewProperty(@Nonnull String property, @Nonnull Properties properties) {
+        String propertyString = properties.getProperty(property);
+        return Arrays.stream(propertyString.split(";"))
+            .map(pair -> pair.split("=", 2))  // Split each key=value pair
+            .filter(pair -> pair.length == 2) // Ensure valid key=value pairs
+            .collect(Collectors.toMap(
+                pair -> pair[0].trim(),        // Key
+                pair -> pair[1].trim()         // Value
+            ));
+
+    }
     @NotNull
     private static Map<Path, String> resolveRootPaths(@NotNull Path projectsFolderPath, String productsPathsString) {
         Map<Path, String> list = new LinkedHashMap<>();
