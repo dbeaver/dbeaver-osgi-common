@@ -60,6 +60,7 @@ public class BundleInfo implements ModuleInfo {
     }
 
     private final List<String> requireFragments;
+    private final String requiredJava;
 
     protected Set<String> reexportedBundles;
     protected Pair<String, VersionRange> fragmentHost;
@@ -89,7 +90,9 @@ public class BundleInfo implements ModuleInfo {
         @Nonnull Set<Pair<String, VersionRange>> importPackages,
         @Nonnull List<String> requiredFragments,
         @Nullable Pair<String, VersionRange> fragmentHost,
-        @Nullable Integer startLevel) {
+        @Nullable Integer startLevel,
+        @Nullable String requiredExecutionEnvironment
+    ) {
         this.path = path;
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
@@ -101,6 +104,7 @@ public class BundleInfo implements ModuleInfo {
         this.startLevel = startLevel;
         this.fragmentHost = fragmentHost;
         this.requireFragments = requiredFragments;
+        this.requiredJava = requiredExecutionEnvironment;
     }
 
     public @Nullable Path getPath() {
@@ -151,6 +155,10 @@ public class BundleInfo implements ModuleInfo {
         return startLevel;
     }
 
+    public String getRequiredJava() {
+        return requiredJava;
+    }
+
     @Nullable
     public String getAdditionalVersions() {
         return additionalVersions;
@@ -186,7 +194,8 @@ public class BundleInfo implements ModuleInfo {
             Objects.equals(getRequireBundles(), that.getRequireBundles()) &&
             Objects.equals(getExportPackages(), that.getExportPackages()) &&
             Objects.equals(getImportPackages(), that.getImportPackages()) &&
-            Objects.equals(getStartLevel(), that.getStartLevel());
+            Objects.equals(getStartLevel(), that.getStartLevel()) &&
+            Objects.equals(getRequiredJava(), that.getRequiredJava());
     }
 
     @Override

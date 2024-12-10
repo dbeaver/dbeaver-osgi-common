@@ -17,14 +17,15 @@
 package com.dbeaver.osgi.dependency.processing.resolvers;
 
 import com.dbeaver.osgi.dependency.processing.BundleInfo;
+import com.dbeaver.osgi.dependency.processing.BundleInfoBuilder;
+import com.dbeaver.osgi.dependency.processing.util.DependencyInformation;
+import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
-import com.dbeaver.osgi.dependency.processing.util.BundleUtils;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.jkiss.code.NotNull;
-import com.dbeaver.osgi.dependency.processing.util.DependencyInformation;
-import com.dbeaver.osgi.dependency.processing.util.Version;
+
 import org.jkiss.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,24 +77,24 @@ public class ManifestParser {
             : bundlesStream
             .map(ManifestParser::trimBundleName)
             .toList();
-
+        String requiredExecutionEnvironment = attributes.getValue("Bundle-RequiredExecutionEnvironment");
         Set<String> reexportedBundles = parseReexportedBundles(attributes);
         var exportPackageArg = splitExportPackagesList(attributes.getValue("Export-Package"));
         var importPackageArg = splitImportPackagesList(attributes.getValue("Import-Package"));
         Pair<String, VersionRange> fragmentHost = parseFragmentHost(attributes);
-        return new BundleInfo(
-            pathToContainingFolderOrJar,
-            bundleName,
-            bundleVersionArg != null ? bundleVersionArg.trim() : "",
-            classPath,
-            requireBundles,
-            reexportedBundles,
-            exportPackageArg,
-            importPackageArg,
-            requiredFragments,
-            fragmentHost,
-            startLevel
-        );
+        return new BundleInfoBuilder().setPath(pathToContainingFolderOrJar)
+            .setBundleName(bundleName)
+            .setBundleVersion(bundleVersionArg != null ? bundleVersionArg.trim() : "")
+            .setClasspathLibs(classPath)
+            .setRequireBundles(requireBundles)
+            .setReexportedBundles(reexportedBundles)
+            .setExportPackages(exportPackageArg)
+            .setImportPackages(importPackageArg)
+            .setRequiredFragments(requiredFragments)
+            .setFragmentHost(fragmentHost)
+            .setStartLevel(startLevel)
+            .setRequiredExecutionEnvironment(requiredExecutionEnvironment)
+            .createBundleInfo();
     }
 
     @org.jkiss.code.Nullable
@@ -124,7 +125,7 @@ public class ManifestParser {
 
     @org.jkiss.code.Nullable
     private static Stream<String> getBundlesStream(String requireBundlesArg) {
-        return requireBundlesArg == null ? null : BundleUtils.splitByTopLevel(requireBundlesArg)
+        return requireBundlesArg == null ? null : splitByTopLevel(requireBundlesArg)
             .stream()
             .filter(ManifestParser::filterOptionalDependencies);
     }
@@ -165,7 +166,7 @@ public class ManifestParser {
         if (bundleClassPathArg == null) {
             return List.of();
         }
-        return BundleUtils.splitByTopLevel(bundleClassPathArg)
+        return splitByTopLevel(bundleClassPathArg)
             .stream()
             .map(String::trim)
             .filter(it -> !it.equals("."))
@@ -194,10 +195,41 @@ public class ManifestParser {
 
     @NotNull
     private static Stream<DependencyInformation> getDependencyInformationStream(@NotNull String packagesList, boolean isExport) {
-        return BundleUtils.splitByTopLevel(packagesList).stream()
+        return splitByTopLevel(packagesList).stream()
             .filter(ManifestParser::filterOptionalDependencies)
             .map(it -> convertToDependencyInformation(it, isExport));
     }
 
+    public static List<String> splitByTopLevel(String s) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        Deque<Character> stack = new ArrayDeque<>();
+        boolean insideQuotes = false;
+        for (char c : s.toCharArray()) {
+            // Check for opening brackets and push to stack
+            if (c == '(' || c == '{' || c == '[') {
+                stack.push(c);
+            }
+            if (c == ')' || c == '}' || c == ']') {
+                stack.pop();
+                current.append(c);
+            }
+            if (c == '\"') {
+                insideQuotes = !insideQuotes;
+            }
+            // If it's a comma outside of any brackets, split
+            else if (c == ',' && stack.isEmpty() && !insideQuotes) {
+                result.add(current.toString().trim());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+        // Add the last part
+        if (!current.isEmpty()) {
+            result.add(current.toString().trim());
+        }
 
+        return result;
+    }
 }
