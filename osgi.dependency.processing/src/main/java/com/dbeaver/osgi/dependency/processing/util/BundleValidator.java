@@ -14,7 +14,7 @@ public class BundleValidator {
         "unit"
     );
 
-    public static boolean isBundleAcceptable(@Nonnull String bundleName) {
+    public static boolean isInternalBundle(@Nonnull String bundleName) {
         return !bundleName.startsWith("org.jkiss.bundle") &&
             PACKAGES_FOR_DEV_PROPERTIES.stream().anyMatch(bundleName::startsWith);
     }

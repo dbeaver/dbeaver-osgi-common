@@ -43,6 +43,7 @@ public class Result {
 
     private final ProductLaunchArguments arguments = new ProductLaunchArguments();
     private DependencyGraph productGraph;
+    private String version;
 
     public FeatureInfo addResolvedFeature(@Nonnull String featureName, File featureXmlFile) {
         return resolvedFeatures.computeIfAbsent(featureName, s -> new FeatureInfo(featureName, featureXmlFile));
@@ -127,6 +128,9 @@ public class Result {
         return applicationId;
     }
 
+    public String getVersion() {
+        return version;
+    }
 
     @Nullable
     public String getWorkDir() {
@@ -152,11 +156,12 @@ public class Result {
         this.productName = productName;
     }
 
-    public void setProductInfo(String productName, String uid, String id, String application) {
+    public void setProductInfo(String productName, String uid, String id, String application, String version) {
         this.productName = productName.replaceAll("\\s+", "");
         this.productUID = uid;
         this.productId = id;
         this.applicationId = application;
+        this.version = version;
     }
 
     public void setProductGraph(DependencyGraph dependencyGraph) {
