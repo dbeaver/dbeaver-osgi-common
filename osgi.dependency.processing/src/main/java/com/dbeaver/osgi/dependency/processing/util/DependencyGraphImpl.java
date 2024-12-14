@@ -117,7 +117,7 @@ public class DependencyGraphImpl extends DependencyGraph {
         for (Pair<DependencyNode, DependencyNode.DependencyType> dep : node.getDependencies()) {
             String childType = dep.getSecond()
                 .equals(DependencyNode.DependencyType.DIRECT_DEPENDENCY) ? "  -> " : " -> (import)";
-            if (BundleValidator.isBundleAcceptable(dep.getFirst().getName())) {
+            if (BundleValidator.isInternalBundle(dep.getFirst().getName())) {
                 printNode(dep.getFirst(), indent + " ", childType, buffer, outputFile);
             } else {
                 writeToBuffer(buffer, indent + " " + childType + dep.getFirst().getName() + "\n", outputFile);

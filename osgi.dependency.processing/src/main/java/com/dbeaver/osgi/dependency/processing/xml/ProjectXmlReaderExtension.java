@@ -48,7 +48,8 @@ class ProjectXmlReaderExtension extends XmlReaderExtension {
                     startElement.getAttributeByName(new QName("", "name")).getValue(),
                     startElement.getAttributeByName(new QName("", "uid")).getValue(),
                     startElement.getAttributeByName(new QName("", "id")).getValue(),
-                    startElement.getAttributeByName(new QName("", "application")).getValue());
+                    startElement.getAttributeByName(new QName("", "application")).getValue(),
+                    startElement.getAttributeByName(new QName("", "version")).getValue());
                 break;
             }
             case "feature": {
