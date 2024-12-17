@@ -216,6 +216,7 @@ public class ManifestParser {
             }
             if (c == '\"') {
                 insideQuotes = !insideQuotes;
+                current.append(c);
             }
             // If it's a comma outside of any brackets, split
             else if (c == ',' && stack.isEmpty() && !insideQuotes) {
