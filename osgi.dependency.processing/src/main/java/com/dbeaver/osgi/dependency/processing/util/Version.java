@@ -25,7 +25,7 @@ public class Version implements Comparable<Version> {
     String delta;
 
     public Version(String str) {
-        if (str.startsWith("\"")) {
+        if (str.startsWith("\"") && str.endsWith("\"")) {
             str = str.substring(1, str.length() - 1);
         }
         int divPos1 = str.indexOf('.');

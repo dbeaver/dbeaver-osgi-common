@@ -59,7 +59,7 @@ public class VersionRange extends Pair<Version, Version> {
         if (range == null) {
             return null;
         }
-        if (range.startsWith("\"")) {
+        if (range.startsWith("\"") && range.endsWith("\"")) {
             range = range.substring(1, range.length() - 1);
         }
         return range;
