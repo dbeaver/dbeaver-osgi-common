@@ -30,9 +30,12 @@ public class VersionRange extends Pair<Version, Version> {
     }
     @Nullable
     public static VersionRange fromString(String range) {
+        range = trimColons(range);
         if (range == null || "0.0.0".equals(range)) {
             return null;
         }
+        // Some artifacts might use this weird notation, does the same thing
+        range = range.replace("((", "(").replace("))", ")");
         if (range.contains("(") || range.contains("[")) {
             boolean includingFirst = range.startsWith("[");
             boolean includingSecond = range.endsWith("]");
@@ -49,6 +52,17 @@ public class VersionRange extends Pair<Version, Version> {
             Version version = new Version(range);
             return new VersionRange(version, null, true, true);
         }
+    }
+
+    @Nullable
+    private static String trimColons(String range) {
+        if (range == null) {
+            return null;
+        }
+        if (range.startsWith("\"")) {
+            range = range.substring(1, range.length() - 1);
+        }
+        return range;
     }
 
     public boolean versionIsSuitable(Version version) {

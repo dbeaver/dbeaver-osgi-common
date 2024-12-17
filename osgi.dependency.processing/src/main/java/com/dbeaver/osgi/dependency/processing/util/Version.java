@@ -25,6 +25,9 @@ public class Version implements Comparable<Version> {
     String delta;
 
     public Version(String str) {
+        if (str.startsWith("\"")) {
+            str = str.substring(1, str.length() - 1);
+        }
         int divPos1 = str.indexOf('.');
         if (divPos1 == -1) {
             major = Integer.parseInt(str);
