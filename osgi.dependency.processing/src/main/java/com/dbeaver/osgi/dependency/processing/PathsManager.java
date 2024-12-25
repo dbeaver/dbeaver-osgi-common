@@ -168,7 +168,7 @@ public enum PathsManager {
         }
 
 
-        var testBundlesPathsString = (String) settings.get(ConfigurationConstants.TEST_BUNDLE_PATHS_PARAM);
+        var testBundlesPathsString = (String) settings.getOrDefault(ConfigurationConstants.TEST_BUNDLE_PATHS_PARAM, "");
         testBundlesPaths =
             Arrays.stream(testBundlesPathsString.split(";"))
                 .map(String::trim)
