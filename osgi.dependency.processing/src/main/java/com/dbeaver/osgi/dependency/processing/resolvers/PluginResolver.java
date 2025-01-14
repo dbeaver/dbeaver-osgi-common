@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -143,25 +144,16 @@ public class PluginResolver {
     ) {
         try {
             if (pluginJarOrFolder.isDirectory()) {
-                var manifestFile = pluginJarOrFolder.toPath().resolve(MANIFEST_PATH).toFile();
-                if (!manifestFile.exists()) {
-                    log.error("Cannot find '{}'", manifestFile.getPath());
-                }
-                try (var inputStream = new FileInputStream(manifestFile)) {
-                    var manifest = new Manifest(inputStream);
-                    return ManifestParser.parseManifest(pluginJarOrFolder.toPath(), startLevel, manifest);
-                }
-            } else {
-                try (var jarFile = new JarFile(pluginJarOrFolder)) {
-                    var manifest = jarFile.getManifest();
-                    return ManifestParser.parseManifest(pluginJarOrFolder.toPath(), startLevel, manifest);
-                } catch (Exception e) {
-                    log.error("Error during opening jar file for " + pluginJarOrFolder);
-                    throw e;
+                try (var inputStream = Files.newInputStream(pluginJarOrFolder.toPath().resolve(MANIFEST_PATH))) {
+                    return ManifestParser.parseManifest(pluginJarOrFolder.toPath(), startLevel, new Manifest(inputStream));
                 }
             }
+            try (var jarFile = new JarFile(pluginJarOrFolder)) {
+                return ManifestParser.parseManifest(pluginJarOrFolder.toPath(), startLevel, jarFile.getManifest());
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.warn("couldn't extract bundle info for " + pluginJarOrFolder, e);
+            return null;
         }
     }
 
