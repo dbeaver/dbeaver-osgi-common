@@ -160,6 +160,53 @@ public class PluginResolver {
     public static void resolveTestBundlesAndLibraries(Result result, DependencyGraph graph) throws IOException {
         PathsManager manager = PathsManager.INSTANCE;
         P2BundleLookupCache lookupCache = P2RepositoryManager.INSTANCE.getLookupCache();
+
+
+        Set<String> testLibraries = manager.getTestLibraries();
+        Set<BundleInfo> testLibrariesBundles = new LinkedHashSet<>();
+        if (testLibraries != null) {
+            for (String testLibrary : testLibraries) {
+                Set<BundleInfo> bundleByName = result.getBundlesByName(testLibrary);
+                if (bundleByName == null) {
+                    var pluginsFoldersPaths = PathsManager.INSTANCE.getBundlesLocations();
+
+                    List<BundleInfo> bundleInfos = pluginsFoldersPaths.stream()
+                        .map(pluginFolderPath -> {
+                            var correctedFolderName = correctFolderName(testLibrary);
+                            return FileUtils.findFirstChildByPackageName(pluginFolderPath, correctedFolderName);
+                        })
+                        .filter(Objects::nonNull)
+                        .map(pluginJarOrFolder -> extractBundleInfo(pluginJarOrFolder, 0))
+                        .filter(Objects::nonNull)
+                        .toList();
+                    if (!bundleInfos.isEmpty()) {
+                        bundleByName = new HashSet<>(bundleInfos);
+                        for (BundleInfo bundleInfo : bundleByName) {
+                            result.addBundle(bundleInfo);
+                            testLibrariesBundles.add(bundleInfo);
+                        }
+                    } else {
+                        bundleByName = new HashSet<>(bundleInfos);
+                        Collection<RemoteP2BundleInfo> remoteBundlesByName = lookupCache.getRemoteBundlesByName(
+                            testLibrary);
+                        Optional<RemoteP2BundleInfo> remoteP2BundleInfo = remoteBundlesByName.stream().findFirst();
+                        if (remoteP2BundleInfo.isPresent()) {
+                            remoteP2BundleInfo.get().resolveBundle();
+                            bundleByName.add(remoteP2BundleInfo.get());
+                            for (BundleInfo bundleInfo : bundleByName) {
+                                result.addBundle(bundleInfo);
+                                testLibrariesBundles.add(bundleInfo);
+                            }
+                        }
+                    }
+                }
+                if (bundleByName != null) {
+                    for (BundleInfo bundleInfo : bundleByName) {
+                        result.addBundle(bundleInfo);
+                    }
+                }
+            }
+        }
         Collection<Path> testBundlesPaths = manager.getTestBundlesPaths();
         for (Path testBundlesPath : testBundlesPaths) {
             if (testBundlesPath.toFile().exists() && testBundlesPath.toFile().isDirectory()) {
@@ -180,49 +227,7 @@ public class PluginResolver {
                         }
                     }
                 }
-                Set<String> testLibraries = manager.getTestLibraries();
-                if (testLibraries != null) {
-                    for (String testLibrary : testLibraries) {
-                        Set<BundleInfo> bundleByName = result.getBundlesByName(testLibrary);
-                        if (bundleByName == null) {
-                            var pluginsFoldersPaths = PathsManager.INSTANCE.getBundlesLocations();
-
-                            List<BundleInfo> bundleInfos = pluginsFoldersPaths.stream()
-                                .map(pluginFolderPath -> {
-                                    var correctedFolderName = correctFolderName(testLibrary);
-                                    return FileUtils.findFirstChildByPackageName(pluginFolderPath, correctedFolderName);
-                                })
-                                .filter(Objects::nonNull)
-                                .map(pluginJarOrFolder -> extractBundleInfo(pluginJarOrFolder, 0))
-                                .filter(Objects::nonNull)
-                                .toList();
-                            if (!bundleInfos.isEmpty()) {
-                                bundleByName = new HashSet<>(bundleInfos);
-                                for (BundleInfo bundleInfo : bundleByName) {
-                                    result.addBundle(bundleInfo);
-                                    bundlesToResolve.add(bundleInfo);
-                                }
-                            } else {
-                                bundleByName = new HashSet<>(bundleInfos);
-                                Collection<RemoteP2BundleInfo> remoteBundlesByName = lookupCache.getRemoteBundlesByName(testLibrary);
-                                Optional<RemoteP2BundleInfo> remoteP2BundleInfo = remoteBundlesByName.stream().findFirst();
-                                if (remoteP2BundleInfo.isPresent()) {
-                                    remoteP2BundleInfo.get().resolveBundle();
-                                    bundleByName.add(remoteP2BundleInfo.get());
-                                    for (BundleInfo bundleInfo : bundleByName) {
-                                        result.addBundle(bundleInfo);
-                                        bundlesToResolve.add(bundleInfo);
-                                    }
-                                }
-                            }
-                        }
-                        if (bundleByName != null) {
-                            for (BundleInfo bundleInfo : bundleByName) {
-                                result.addBundle(bundleInfo);
-                            }
-                        }
-                    }
-                }
+                bundlesToResolve.addAll(testLibrariesBundles);
                 for (BundleInfo bundleInfo : bundlesToResolve) {
                     for (Pair<String, VersionRange> requireBundle : bundleInfo.getRequireBundles()) {
                         resolvePluginDependencies(result, requireBundle, null, lookupCache, graph);
@@ -232,10 +237,9 @@ public class PluginResolver {
                     }
                 }
             }
+            }
 
         }
-
-    }
 
     private static void parseBundleInfo(
         @Nonnull Result result,
