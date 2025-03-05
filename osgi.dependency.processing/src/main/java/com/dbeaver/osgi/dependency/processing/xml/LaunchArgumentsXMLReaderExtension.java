@@ -2,6 +2,7 @@ package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.Result;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import org.jkiss.utils.ZeroSizedArrays;
 
 import javax.xml.stream.events.StartElement;
 
@@ -62,7 +63,6 @@ public class LaunchArgumentsXMLReaderExtension extends XmlReaderExtension {
         while (matcher.find()) {
             argsList.add(matcher.group());
         }
-        return argsList.toArray(new String[0]);
+        return argsList.toArray(ZeroSizedArrays.OF_STRING);
     }
 }
-
