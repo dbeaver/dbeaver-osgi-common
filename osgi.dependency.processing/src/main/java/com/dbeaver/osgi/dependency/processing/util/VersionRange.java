@@ -28,6 +28,7 @@ public class VersionRange extends Pair<Version, Version> {
         this.includingFirst = includingFirst;
         this.includingSecond = includingSecond;
     }
+
     @Nullable
     public static VersionRange fromString(String range) {
         range = trimColons(range);
@@ -36,6 +37,7 @@ public class VersionRange extends Pair<Version, Version> {
         }
         // Some artifacts might use this weird notation, does the same thing
         range = range.replace("((", "(").replace("))", ")");
+        range = range.replace("[[", "[").replace("]]", "]");
         if (range.contains("(") || range.contains("[")) {
             boolean includingFirst = range.startsWith("[");
             boolean includingSecond = range.endsWith("]");
