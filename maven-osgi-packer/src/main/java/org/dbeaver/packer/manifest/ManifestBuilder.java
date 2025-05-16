@@ -32,7 +32,7 @@ public class ManifestBuilder {
         manifest.append("Bundle-RequiredExecutionEnvironment: JavaSE-17\n");
         // write classpath
         manifest.append("Bundle-ClassPath: \n");
-        Path osgiBundlePath = basedir.resolve("../../osgi-bundles").resolve(basedir.getFileName()).normalize();
+        Path osgiBundlePath = basedir.resolve("../../target-bundles").resolve(basedir.getFileName()).normalize();
         for (String classpath : classpaths) {
             manifest.append(" ").append(osgiBundlePath.relativize(Paths.get(classpath)).toString());
             if (!classpaths.get(classpaths.size() - 1).equals(classpath)) {

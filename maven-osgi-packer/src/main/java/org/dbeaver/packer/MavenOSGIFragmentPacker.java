@@ -29,9 +29,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +38,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 @Mojo(name = "create-osgi-bundle")
 public class MavenOSGIFragmentPacker extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -60,7 +60,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             if (!Files.exists(metaFolder)) {
                 return;
             }
-            Path bundlePath = basedir.resolve("../../osgi-bundles").resolve(basedir.getFileName());
+            Path bundlePath = basedir.resolve("../../target-bundles").resolve(basedir.getFileName());
             // Delete recursively
             if (Files.exists(bundlePath)) {
                 try (Stream<Path> walk = Files.walk(bundlePath)) {
