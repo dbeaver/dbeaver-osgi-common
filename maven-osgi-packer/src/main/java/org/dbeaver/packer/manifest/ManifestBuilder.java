@@ -32,9 +32,9 @@ public class ManifestBuilder {
         manifest.append("Bundle-RequiredExecutionEnvironment: JavaSE-17\n");
         // write classpath
         manifest.append("Bundle-ClassPath: \n");
-
+        Path osgiBundlePath = basedir.resolve("../../osgi-bundles").resolve(basedir.getFileName()).normalize();
         for (String classpath : classpaths) {
-            manifest.append(" ").append(basedir.relativize(Paths.get(classpath)).toString().replace("bundle\\", ""));
+            manifest.append(" ").append(osgiBundlePath.relativize(Paths.get(classpath)).toString());
             if (!classpaths.get(classpaths.size() - 1).equals(classpath)) {
                 manifest.append(",\n");
             }
@@ -43,58 +43,60 @@ public class ManifestBuilder {
         manifest.append("\n");
         // Real all jar files in classpath, extract packages as exports, if packages have no exports in manifest get all packages
         final boolean[] hasExportPackage = {false};
-        Set<String> packages = new LinkedHashSet<>();
-        for (String classpath : classpaths) {
-            try (JarFile jarFile = new JarFile(classpath)) {
-                Manifest mf = jarFile.getManifest();
-                AtomicBoolean currentClasspathContainsExportPackage = new AtomicBoolean(false);
-                if (mf != null) {
-                    mf.getMainAttributes().forEach((key, value) -> splitByCommaOutsideQuotes(value.toString()).forEach(v -> {
-                        if (key.toString().startsWith("Export-Package")) {
-                            String pkg = !v.contains(";") ? v : v.split(";")[0].trim();
-                            if (packages.contains(pkg)) {
-                                return;
-                            }
-                            packages.add(pkg);
-                            if (!hasExportPackage[0]) {
-                                currentClasspathContainsExportPackage.set(true);
-                                manifest.append(key).append(": \n ").append(v);
-                                hasExportPackage[0] = true;
-                            } else {
-                                manifest.append(",\n ").append(v);
-                                currentClasspathContainsExportPackage.set(true);
-                            }
-                        }
-                    }));
-                }
-                if (!currentClasspathContainsExportPackage.get()) {
-                    // get all packages from the jar file outside manifest
-                    jarFile.stream().filter(e -> e.getName().endsWith(".class")).filter(e -> !e.getName().contains("META-INF"))
-                        .forEach(e -> {
-                            String className = e.getName();
-                            int lastSlash = className.lastIndexOf('/');
-                            if (lastSlash > 0) {
-                                String pkg = className.substring(0, lastSlash).replace('/', '.');
+        provideDependencies(fragPath, manifest, hasExportPackage);
+        if (!hasExportPackage[0]) {
+            Set<String> packages = new LinkedHashSet<>();
+            for (String classpath : classpaths) {
+                try (JarFile jarFile = new JarFile(classpath)) {
+                    Manifest mf = jarFile.getManifest();
+                    AtomicBoolean currentClasspathContainsExportPackage = new AtomicBoolean(false);
+                    if (mf != null) {
+                        mf.getMainAttributes().forEach((key, value) -> splitByCommaOutsideQuotes(value.toString()).forEach(v -> {
+                            if (key.toString().startsWith("Export-Package")) {
+                                String pkg = !v.contains(";") ? v : v.split(";")[0].trim();
                                 if (packages.contains(pkg)) {
                                     return;
                                 }
                                 packages.add(pkg);
                                 if (!hasExportPackage[0]) {
-                                    manifest.append("Export-Package").append(": \n ").append(pkg);
+                                    currentClasspathContainsExportPackage.set(true);
+                                    manifest.append(key).append(": \n ").append(v);
                                     hasExportPackage[0] = true;
                                 } else {
-                                    manifest.append(",\n ").append(pkg);
+                                    manifest.append(",\n ").append(v);
+                                    currentClasspathContainsExportPackage.set(true);
                                 }
                             }
-                        });
+                        }));
+                    }
+                    if (!currentClasspathContainsExportPackage.get()) {
+                        // get all packages from the jar file outside manifest
+                        jarFile.stream().filter(e -> e.getName().endsWith(".class")).filter(e -> !e.getName().contains("META-INF"))
+                            .forEach(e -> {
+                                String className = e.getName();
+                                int lastSlash = className.lastIndexOf('/');
+                                if (lastSlash > 0) {
+                                    String pkg = className.substring(0, lastSlash).replace('/', '.');
+                                    if (packages.contains(pkg)) {
+                                        return;
+                                    }
+                                    packages.add(pkg);
+                                    if (!hasExportPackage[0]) {
+                                        manifest.append("Export-Package").append(": \n ").append(pkg);
+                                        hasExportPackage[0] = true;
+                                    } else {
+                                        manifest.append(",\n ").append(pkg);
+                                    }
+                                }
+                            });
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error reading jar file: " + e.getMessage());
                 }
-            } catch (IOException e) {
-                System.out.println("Error reading jar file: " + e.getMessage());
             }
         }
         manifest.append("\n");
         // dependencies, extract parameters from fragPath .MF file\
-        provideDependencies(fragPath, manifest);
         manifest.append("\n");
         return manifest.toString();
     }
@@ -108,10 +110,13 @@ public class ManifestBuilder {
             """;
     }
 
-    private static void provideDependencies(Path fragPath, StringBuilder manifest) {
+    private static void provideDependencies(Path fragPath, StringBuilder manifest, boolean[] hasExportPackage) {
         try (FileInputStream fos = new FileInputStream(fragPath.toFile())) {
             Manifest mf = new Manifest(fos);
             mf.getMainAttributes().forEach((key, value) -> {
+                if (key.toString().startsWith("Export-Package")) {
+                    hasExportPackage[0] = true;
+                }
                 boolean isFirst = true;
                 List<String> strings = splitByCommaOutsideQuotes(value.toString());
                 for (String string : strings) {
