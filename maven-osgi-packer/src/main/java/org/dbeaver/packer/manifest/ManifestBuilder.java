@@ -34,12 +34,12 @@ public class ManifestBuilder {
         manifest.append("Bundle-ClassPath: \n");
 
         for (String classpath : classpaths) {
-            manifest.append(" ").append(basedir.relativize(Paths.get(classpath)));
+            manifest.append(" ").append(basedir.relativize(Paths.get(classpath)).toString().replace("bundle\\", ""));
             if (!classpaths.get(classpaths.size() - 1).equals(classpath)) {
                 manifest.append(",\n");
             }
-
         }
+
         manifest.append("\n");
         // Real all jar files in classpath, extract packages as exports, if packages have no exports in manifest get all packages
         final boolean[] hasExportPackage = {false};
@@ -104,7 +104,7 @@ public class ManifestBuilder {
             source.. =
             bin.includes = META-INF/,\\
                            lib/
-            src.includes = META-INF/        
+            src.includes = META-INF/
             """;
     }
 

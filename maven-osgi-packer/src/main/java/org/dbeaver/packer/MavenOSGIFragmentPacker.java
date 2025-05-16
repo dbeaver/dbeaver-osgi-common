@@ -51,17 +51,16 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
+
             // parse pom.xml
             Path basedir = project.getBasedir().toPath();
-            Path pomFile = basedir.resolve("pom.xml");
-            ParseResult parseResult = parsePomFile(pomFile);
+
             // Assuming project base dir is current dir
             Path metaFolder = basedir.resolve("META-INF");
-            File fragPath = metaFolder.resolve("FRAG.FMF").toFile();
-            if (!metaFolder.toFile().exists()) {
+            if (!Files.exists(metaFolder)) {
                 return;
             }
-            Path bundlePath = basedir.resolve("bundle");
+            Path bundlePath = basedir.resolve("../../osgi-bundles").resolve(basedir.getFileName());
             // Delete recursively
             if (Files.exists(bundlePath)) {
                 try (Stream<Path> walk = Files.walk(bundlePath)) {
@@ -76,23 +75,36 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                 }
             }
             Files.createDirectory(bundlePath);
+            Path fragPath = metaFolder.resolve("FRAG.FMF");
             Path lib = bundlePath.resolve("lib");
             Files.createDirectory(lib);
 
             Path resolve = Files.createDirectory(bundlePath.resolve("META-INF"));
             Path manifestPath = resolve.resolve("MANIFEST.MF");
             Files.deleteIfExists(manifestPath);
-            if (fragPath.exists() && fragPath.isFile()) {
-                System.out.println("Found FRAG.FMF at: " + fragPath.getAbsolutePath());
+            if (Files.exists(fragPath) && Files.isRegularFile(fragPath)) {
+                System.out.println("Found FRAG.FMF at: " + fragPath.toAbsolutePath());
             } else {
                 System.out.println("FRAG.FMF not found in META-INF directory.");
             }
+
+            // Copy META-INF to bundlePath
+            Path pomFile = basedir.resolve("pom.xml");
+            ParseResult parseResult = parsePomFile(pomFile);
             String moduleVersion = parseResult.version;
             String symbolicName = parseResult.artifactId;
             String moduleName = String.valueOf(basedir.getFileName());
             List<String> classpathList = new ArrayList<>();
             transferAndIndexLibraries(basedir, lib, classpathList);
-            writeManifest(symbolicName, moduleName, moduleVersion, classpathList, basedir, fragPath, manifestPath);
+            writeManifest(
+                symbolicName,
+                moduleName,
+                moduleVersion,
+                classpathList,
+                basedir,
+                fragPath,
+                manifestPath
+            );
             writeBuildProperties(bundlePath);
             writePOM(bundlePath, parseResult, basedir);
 
@@ -125,9 +137,24 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         Files.write(buildProperties, ManifestBuilder.getDefaultBuildProperties().getBytes());
     }
 
-    private static void writeManifest(String symbolicName, String moduleName, String moduleVersion, List<String> classpathList, Path basedir,
-                                  File fragPath, Path manifestPath) throws IOException {
-        String builtManifest = ManifestBuilder.buildManifest(symbolicName, moduleName, moduleVersion, classpathList, basedir, fragPath.toPath());
+    private static void writeManifest(
+        String symbolicName,
+        String moduleName,
+        String moduleVersion,
+        List<String> classpathList,
+        Path basedir,
+        Path fragPath,
+        Path manifestPath
+    ) throws IOException {
+        String builtManifest =
+            ManifestBuilder.buildManifest(
+                symbolicName,
+                moduleName,
+                moduleVersion,
+                classpathList,
+                basedir,
+                fragPath
+            );
         Files.createFile(manifestPath);
         Files.write(manifestPath, builtManifest.getBytes());
     }
@@ -136,7 +163,11 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         Path pom = bundlePath.resolve("pom.xml");
         Files.deleteIfExists(pom);
         Files.createFile(pom);
-        String buildPom  = PomBuilder.buildPom(parseResult.groupId, parseResult.artifactId, parseResult.version, basedir);
+        String buildPom  = PomBuilder.buildPom(
+            parseResult.groupId,
+            parseResult.artifactId,
+            parseResult.version
+        );
         Files.write(pom, buildPom.getBytes());
     }
     // pars

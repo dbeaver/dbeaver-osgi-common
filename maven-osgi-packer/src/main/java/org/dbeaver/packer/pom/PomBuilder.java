@@ -1,9 +1,7 @@
 package org.dbeaver.packer.pom;
 
-import java.nio.file.Path;
-
 public class PomBuilder {
-    public static String buildPom(String groupId, String artifactId, String version, Path basedir) {
+    public static String buildPom(String groupId, String artifactId, String version) {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
             "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
@@ -16,9 +14,9 @@ public class PomBuilder {
             "    <version>" + version + "</version>\n" +
             "    <parent>\n" +
             "           <groupId>com.dbeaver.osgi</groupId>" + "\n" +
-            "           <artifactId>external</artifactId>" + "\n" +
+            "           <artifactId>root</artifactId>" + "\n" +
             "           <version>1.0.0-SNAPSHOT</version>" + "\n" +
-            "           <relativePath>../../../osgi-root/pom.xml</relativePath>" + "\n" +
+            "           <relativePath>../pom.xml</relativePath>" + "\n" +
             "    </parent>\n" +
             "</project>\n";
     }
