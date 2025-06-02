@@ -87,8 +87,8 @@ public class RemoteP2BundleInfo extends BundleInfo {
             if (path.toFile().exists()) {
                 return true;
             }
-            log.info("Downloading %s_%s from %s... ".formatted(getBundleName(), getBundleVersion(), getRepository().getName()));
-            log.debug("Thread number %s used to download %s".formatted(Thread.currentThread().getName(), getBundleName()));
+            log.info("Downloading {}_{} from {}... ", getBundleName(), getBundleVersion(), getRepository().getName());
+            log.debug("Thread number {} used to download {}", Thread.currentThread().getName(), getBundleName());
             Path filePath = repository.resolveBundle(this);
             if (filePath == null) {
                 return false;
@@ -105,7 +105,7 @@ public class RemoteP2BundleInfo extends BundleInfo {
                     this.reexportedBundles = ManifestParser.parseReexportedBundles(manifest.getMainAttributes());
                     this.fragmentHost = ManifestParser.parseFragmentHost(manifest.getMainAttributes());
                 } catch (IOException e) {
-                    log.error("Cannot load bundle %s".formatted(getBundleName()), e);
+                    log.error("Cannot load bundle {}", getBundleName(), e);
                     return false;
                 }
             } else {
@@ -115,7 +115,7 @@ public class RemoteP2BundleInfo extends BundleInfo {
                     this.reexportedBundles = ManifestParser.parseReexportedBundles(manifest.getMainAttributes());
                     this.fragmentHost = ManifestParser.parseFragmentHost(manifest.getMainAttributes());
                 } catch (IOException e) {
-                    log.error("Cannot load bundle %s".formatted(getBundleName()), e);
+                    log.error("Cannot load bundle {}", getBundleName(), e);
                     return false;
                 }
             }
@@ -127,7 +127,7 @@ public class RemoteP2BundleInfo extends BundleInfo {
                     }
                 }
             }
-            log.info("%s download completed".formatted(getBundleName()));
+            log.info("{} download completed", getBundleName());
             return true;
         } finally {
             lock.unlock();

@@ -84,7 +84,7 @@ public class DependencyGraphImpl extends DependencyGraph {
 
     // Depth-first traversal to print the dependency tree
     public void printDependencyTree(@NotNull DependencyNode startNode) throws IOException {
-        log.info("Generating dependency tree for %s".formatted(startNode.getName()));
+        log.info("Generating dependency tree for {}", startNode.getName());
         Path treeOutputFolder = PathsManager.INSTANCE.getTreeOutputFolder();
         Files.createDirectories(treeOutputFolder);
         StringBuffer buffer = new StringBuffer();
@@ -97,7 +97,7 @@ public class DependencyGraphImpl extends DependencyGraph {
         }
         printNode(startNode, "", "", buffer, file);
         flushRemainingBuffer(buffer, file);  // Write any leftover content in the buffer
-        log.info("Generation for %s complete".formatted(startNode));
+        log.info("Generation for {} complete", startNode);
     }
 
     // Recursive method to print each node and its dependencies
