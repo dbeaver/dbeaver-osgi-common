@@ -4,15 +4,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 public class ManifestBuilder {
+    private static final String MANIFEST_VERSION = "Manifest-Version";
+    private static final String BUNDLE_MANIFEST_VERSION = "Bundle-ManifestVersion";
+    private static final String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
+    private static final String BUNDLE_VERSION = "Bundle-Version";
+    private static final String BUNDLE_NAME = "Bundle-Name";
+    private static final String BUNDLE_ACTIVATION_POLICY = "Bundle-ActivationPolicy";
+    private static final String BUNDLE_REQUIRED_EXECUTION_ENVIRONMENT = "Bundle-RequiredExecutionEnvironment";
+    private static final String BUNDLE_CLASS_PATH = "Bundle-ClassPath";
+    private static final String EXPORT_PACKAGE = "Export-Package";
+
     public static String buildManifest(
         String symbolicName,
         String moduleName,
@@ -23,15 +30,66 @@ public class ManifestBuilder {
     ) {
 
         StringBuilder manifest = new StringBuilder();
-        manifest.append("Manifest-Version: 1.0\n");
-        manifest.append("Bundle-ManifestVersion: 2\n");
-        manifest.append("Bundle-SymbolicName: ").append(symbolicName).append("\n");
-        manifest.append("Bundle-Version: ").append(adaptVersion(moduleVersion)).append("\n");
-        manifest.append("Bundle-Name: ").append(moduleName).append("\n");
-        manifest.append("Bundle-ActivationPolicy: lazy\n");
-        manifest.append("Bundle-RequiredExecutionEnvironment: JavaSE-17\n");
+        if (classpaths.size() == 1) {
+            return buildFromExistingManifest(classpaths, basedir);
+        }
+        return generateManifest(symbolicName, moduleName, moduleVersion, classpaths, basedir, fragPath, manifest);
+    }
+
+    private static String buildFromExistingManifest(List<String> classpaths, Path basedir) {
+        // if there is only one classpath, we need to check if it's not already an OSGI project
+        String classpath = classpaths.get(0);
+        Path osgiBundlePath = basedir.resolve("../../target-bundles").resolve(basedir.getFileName()).normalize();
+        StringBuilder manifest = new StringBuilder();
+        if (classpath.endsWith(".jar")) {
+            try (JarFile jarFile = new JarFile(classpath)) {
+                Manifest mf = jarFile.getManifest();
+                if (mf != null && mf.getMainAttributes().getValue(BUNDLE_SYMBOLIC_NAME) != null) {
+                    // this is already an OSGI bundle, we can use its manifest directly, but replace classpath to jar
+                    // Use all except classpath for bundle generation
+                    mf.getMainAttributes().forEach((key, value) -> {
+                        if (!key.toString().equals(BUNDLE_CLASS_PATH)) {
+                            manifest.append(key).append(": ").append(trimBySize((String) value)).append("\n");
+                        }
+                    });
+                    manifest.append(BUNDLE_CLASS_PATH + ": \n");
+                    manifest.append(" ").append(osgiBundlePath.relativize(Paths.get(classpath)).toString());
+                    if (!classpaths.get(classpaths.size() - 1).equals(classpath)) {
+                        manifest.append(",\n");
+                    }
+                    manifest.append("\n");
+                }
+            } catch (IOException e) {
+                System.out.println("Error reading jar file: " + e.getMessage());
+            }
+        }
+        return manifest.toString();
+    }
+
+    private static void addIfExists(StringBuilder manifestBuilder, Manifest mf, String key) {
+        if (mf.getAttributes(key) != null) {
+            manifestBuilder.append(key).append(": ").append(mf.getAttributes(key)).append("\n");
+        }
+    }
+
+    private static String generateManifest(
+        String symbolicName,
+        String moduleName,
+        String moduleVersion,
+        List<String> classpaths,
+        Path basedir,
+        Path fragPath,
+        StringBuilder manifest
+    ) {
+        manifest.append(MANIFEST_VERSION + ": 1.0\n");
+        manifest.append(BUNDLE_MANIFEST_VERSION + ": 2\n");
+        manifest.append(BUNDLE_SYMBOLIC_NAME + ": ").append(symbolicName).append("\n");
+        manifest.append(BUNDLE_VERSION + ": ").append(adaptVersion(moduleVersion)).append("\n");
+        manifest.append(BUNDLE_NAME + ": ").append(moduleName).append("\n");
+        manifest.append(BUNDLE_ACTIVATION_POLICY + ": lazy\n");
+        manifest.append(BUNDLE_REQUIRED_EXECUTION_ENVIRONMENT + ": JavaSE-17\n");
         // write classpath
-        manifest.append("Bundle-ClassPath: \n");
+        manifest.append(BUNDLE_CLASS_PATH + ": \n");
         Path osgiBundlePath = basedir.resolve("../../target-bundles").resolve(basedir.getFileName()).normalize();
         for (String classpath : classpaths) {
             manifest.append(" ").append(osgiBundlePath.relativize(Paths.get(classpath)).toString());
@@ -52,18 +110,20 @@ public class ManifestBuilder {
                     AtomicBoolean currentClasspathContainsExportPackage = new AtomicBoolean(false);
                     if (mf != null) {
                         mf.getMainAttributes().forEach((key, value) -> splitByCommaOutsideQuotes(value.toString()).forEach(v -> {
-                            if (key.toString().startsWith("Export-Package")) {
+                            if (key.toString().startsWith(EXPORT_PACKAGE)) {
                                 String pkg = !v.contains(";") ? v : v.split(";")[0].trim();
                                 if (packages.contains(pkg)) {
                                     return;
                                 }
                                 packages.add(pkg);
+                                StringJoiner joiner = trimBySize(v);
+
                                 if (!hasExportPackage[0]) {
                                     currentClasspathContainsExportPackage.set(true);
-                                    manifest.append(key).append(": \n ").append(v);
+                                    manifest.append(key).append(": \n ").append(joiner);
                                     hasExportPackage[0] = true;
                                 } else {
-                                    manifest.append(",\n ").append(v);
+                                    manifest.append(",\n ").append(joiner);
                                     currentClasspathContainsExportPackage.set(true);
                                 }
                             }
@@ -82,7 +142,7 @@ public class ManifestBuilder {
                                     }
                                     packages.add(pkg);
                                     if (!hasExportPackage[0]) {
-                                        manifest.append("Export-Package").append(": \n ").append(pkg);
+                                        manifest.append(EXPORT_PACKAGE).append(": \n ").append(pkg);
                                         hasExportPackage[0] = true;
                                     } else {
                                         manifest.append(",\n ").append(pkg);
@@ -101,6 +161,15 @@ public class ManifestBuilder {
         return manifest.toString();
     }
 
+    private static StringJoiner trimBySize(String v) {
+        // if v is bigger than 100 characters, split it into multiple lines in for loop
+        StringJoiner joiner = new StringJoiner("\n ");
+        for (int i = 0; i < v.length(); i += 100) {
+            joiner.add(v.substring(i, Math.min(i + 100, v.length())));
+        }
+        return joiner;
+    }
+
     public static String getDefaultBuildProperties() {
         return """
             source.. =
@@ -114,7 +183,7 @@ public class ManifestBuilder {
         try (FileInputStream fos = new FileInputStream(fragPath.toFile())) {
             Manifest mf = new Manifest(fos);
             mf.getMainAttributes().forEach((key, value) -> {
-                if (key.toString().startsWith("Export-Package")) {
+                if (key.toString().startsWith(EXPORT_PACKAGE)) {
                     hasExportPackage[0] = true;
                 }
                 boolean isFirst = true;
