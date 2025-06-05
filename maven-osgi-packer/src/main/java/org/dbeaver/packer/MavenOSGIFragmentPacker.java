@@ -135,9 +135,9 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                 "    <version>1.0.0-SNAPSHOT</version>\n" +
                 "    <parent>\n" +
                 "        <groupId>com.dbeaver.osgi</groupId>\n" +
-                "        <artifactId>dbeaver-deps-p2</artifactId>\n" +
+                "        <artifactId>p2</artifactId>\n" +
                 "        <version>1.0.0-SNAPSHOT</version>\n" +
-                "        <relativePath>../pom.xml</relativePath>\n" +
+                "        <relativePath>../p2/pom.xml</relativePath>\n" +
                 "    </parent>\n" +
                 "    <modules>\n" +
                 "    </modules>\n" +
@@ -170,8 +170,8 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                     classpathList.add(lib.resolve(p.getFileName()));
                 });
             }
+            Files.delete(baseLib);
         }
-        Files.delete(baseLib);
     }
 
     private static void writeBuildProperties(Path bundlePath) throws IOException {
@@ -211,7 +211,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             parseResult.groupId + "." + parseResult.artifactId,
             parseResult.version
         );
-        Files.write(pom, buildPom.getBytes());
+        Files.writeString(pom, buildPom);
     }
     // pars
 

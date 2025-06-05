@@ -14,9 +14,9 @@ public class PomBuilder {
             "    <version>" + version + "</version>\n" +
             "    <parent>\n" +
             "           <groupId>com.dbeaver.osgi</groupId>" + "\n" +
-            "           <artifactId>root</artifactId>" + "\n" +
+            "           <artifactId>target-bundles</artifactId>" + "\n" +
             "           <version>1.0.0-SNAPSHOT</version>" + "\n" +
-            "           <relativePath>../pom.xml</relativePath>" + "\n" +
+            "           <relativePath>../</relativePath>" + "\n" +
             "    </parent>\n" +
             "</project>\n";
     }
