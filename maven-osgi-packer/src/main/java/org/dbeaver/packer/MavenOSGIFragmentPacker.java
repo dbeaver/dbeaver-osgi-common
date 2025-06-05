@@ -74,12 +74,12 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                         });
                 }
             }
-            Files.createDirectory(bundlePath);
+            Files.createDirectories(bundlePath);
             Path fragPath = metaFolder.resolve("FRAG.FMF");
             Path lib = bundlePath.resolve("lib");
-            Files.createDirectory(lib);
+            Files.createDirectories(lib);
 
-            Path resolve = Files.createDirectory(bundlePath.resolve("META-INF"));
+            Path resolve = Files.createDirectories(bundlePath.resolve("META-INF"));
             Path manifestPath = resolve.resolve("MANIFEST.MF");
             Files.deleteIfExists(manifestPath);
             if (Files.exists(fragPath) && Files.isRegularFile(fragPath)) {
