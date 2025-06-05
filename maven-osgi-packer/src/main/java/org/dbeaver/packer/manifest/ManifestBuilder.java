@@ -3,7 +3,6 @@ package org.dbeaver.packer.manifest;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,7 +16,7 @@ public class ManifestBuilder {
         String symbolicName,
         String moduleName,
         String moduleVersion,
-        List<String> classpaths,
+        List<Path> classpaths,
         Path basedir,
         Path fragPath
     ) {
@@ -28,14 +27,16 @@ public class ManifestBuilder {
         manifest.append("Bundle-SymbolicName: ").append(symbolicName).append("\n");
         manifest.append("Bundle-Version: ").append(adaptVersion(moduleVersion)).append("\n");
         manifest.append("Bundle-Name: ").append(moduleName).append("\n");
+        manifest.append("Bundle-Vendor: DBeaver Corp").append("\n");
         manifest.append("Bundle-ActivationPolicy: lazy\n");
         manifest.append("Bundle-RequiredExecutionEnvironment: JavaSE-17\n");
         // write classpath
         manifest.append("Bundle-ClassPath: \n");
-        Path osgiBundlePath = basedir.resolve("../../target-bundles").resolve(basedir.getFileName()).normalize();
-        for (String classpath : classpaths) {
-            manifest.append(" ").append(osgiBundlePath.relativize(Paths.get(classpath)).toString());
-            if (!classpaths.get(classpaths.size() - 1).equals(classpath)) {
+
+        for (int i = 0; i < classpaths.size(); i++) {
+            Path classpath = classpaths.get(i);
+            manifest.append(" lib/").append(classpath.getFileName().toString());
+            if (i < classpaths.size() - 1) {
                 manifest.append(",\n");
             }
         }
@@ -46,8 +47,8 @@ public class ManifestBuilder {
         provideDependencies(fragPath, manifest, hasExportPackage);
         if (!hasExportPackage[0]) {
             Set<String> packages = new LinkedHashSet<>();
-            for (String classpath : classpaths) {
-                try (JarFile jarFile = new JarFile(classpath)) {
+            for (Path classpath : classpaths) {
+                try (JarFile jarFile = new JarFile(classpath.toFile())) {
                     Manifest mf = jarFile.getManifest();
                     AtomicBoolean currentClasspathContainsExportPackage = new AtomicBoolean(false);
                     if (mf != null) {
