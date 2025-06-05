@@ -30,6 +30,7 @@ public class ManifestBuilder {
         manifest.append("Bundle-Vendor: DBeaver Corp").append("\n");
         manifest.append("Bundle-ActivationPolicy: lazy\n");
         manifest.append("Bundle-RequiredExecutionEnvironment: JavaSE-17\n");
+        manifest.append("Eclipse-BundleShape: dir\n");
         // write classpath
         manifest.append("Bundle-ClassPath: \n");
 
