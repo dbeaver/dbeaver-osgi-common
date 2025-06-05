@@ -80,16 +80,14 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             }
             Files.createDirectories(bundlePath);
             Path fragPath = metaFolder.resolve("FRAG.FMF");
-            Path lib = bundlePath.resolve("lib");
-            Files.createDirectories(lib);
 
-            Path resolve = Files.createDirectories(bundlePath.resolve("META-INF"));
-            Path manifestPath = resolve.resolve("MANIFEST.MF");
+            Path targetMetaInf = Files.createDirectories(bundlePath.resolve("META-INF"));
+            Path manifestPath = targetMetaInf.resolve("MANIFEST.MF");
             Files.deleteIfExists(manifestPath);
             if (Files.exists(fragPath) && Files.isRegularFile(fragPath)) {
                 System.out.println("Found FRAG.FMF at: " + fragPath.toAbsolutePath());
             } else {
-                System.out.println("FRAG.FMF not found in META-INF directory.");
+                throw new MojoExecutionException("FRAG.FMF not found in META-INF directory.");
             }
 
             // Copy META-INF to bundlePath
@@ -97,7 +95,10 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             ParseResult parseResult = parsePomFile(pomFile);
             String moduleVersion = parseResult.version;
             List<Path> classpathList = new ArrayList<>();
-            transferAndIndexLibraries(basedir, lib, classpathList);
+
+            Path targetLib = bundlePath.resolve("lib");
+            Files.createDirectories(targetLib);
+            transferAndIndexLibraries(basedir, targetLib, classpathList);
             writeManifest(
                 targetBundleId,
                 targetBundleId,
@@ -157,20 +158,24 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         Files.writeString(pom, pomText);
     }
 
-    private static void transferAndIndexLibraries(Path basedir, Path lib, List<Path> classpathList) throws IOException {
-        Path baseLib = basedir.resolve("lib");
+    private static void transferAndIndexLibraries(Path basedir, Path targetLibDir, List<Path> classpathList)
+        throws IOException, MojoExecutionException
+    {
+        Path baseLib = basedir.resolve("target/lib");
         if (Files.exists(baseLib)) {
             try (Stream<Path> list = Files.list(baseLib)) {
                 list.filter(Files::isRegularFile).filter(p -> p.getFileName().toString().endsWith(".jar")).forEach(p -> {
                     try {
-                        Files.move(p, lib.resolve(p.getFileName()));
+                        Files.move(p, targetLibDir.resolve(p.getFileName()));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    classpathList.add(lib.resolve(p.getFileName()));
+                    classpathList.add(targetLibDir.resolve(p.getFileName()));
                 });
             }
             Files.delete(baseLib);
+        } else {
+            throw new MojoExecutionException("Folder '" + baseLib + "' doesn't exists");
         }
     }
 
