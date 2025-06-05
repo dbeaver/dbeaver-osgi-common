@@ -32,6 +32,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -54,13 +55,16 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
 
             // parse pom.xml
             Path basedir = project.getBasedir().toPath();
+            String targetBundleId = project.getGroupId() + "." + project.getArtifactId();
 
             // Assuming project base dir is current dir
             Path metaFolder = basedir.resolve("META-INF");
             if (!Files.exists(metaFolder)) {
                 return;
             }
-            Path bundlePath = basedir.resolve("../../target-bundles").resolve(basedir.getFileName());
+            Path targetBundlesPath = basedir.resolve("../../target-bundles");
+            patchTargetPom(targetBundlesPath, project);
+            Path bundlePath = targetBundlesPath.resolve(targetBundleId);
             // Delete recursively
             if (Files.exists(bundlePath)) {
                 try (Stream<Path> walk = Files.walk(bundlePath)) {
@@ -74,12 +78,12 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                         });
                 }
             }
-            Files.createDirectory(bundlePath);
+            Files.createDirectories(bundlePath);
             Path fragPath = metaFolder.resolve("FRAG.FMF");
             Path lib = bundlePath.resolve("lib");
-            Files.createDirectory(lib);
+            Files.createDirectories(lib);
 
-            Path resolve = Files.createDirectory(bundlePath.resolve("META-INF"));
+            Path resolve = Files.createDirectories(bundlePath.resolve("META-INF"));
             Path manifestPath = resolve.resolve("MANIFEST.MF");
             Files.deleteIfExists(manifestPath);
             if (Files.exists(fragPath) && Files.isRegularFile(fragPath)) {
@@ -92,13 +96,11 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             Path pomFile = basedir.resolve("pom.xml");
             ParseResult parseResult = parsePomFile(pomFile);
             String moduleVersion = parseResult.version;
-            String symbolicName = parseResult.artifactId;
-            String moduleName = String.valueOf(basedir.getFileName());
-            List<String> classpathList = new ArrayList<>();
+            List<Path> classpathList = new ArrayList<>();
             transferAndIndexLibraries(basedir, lib, classpathList);
             writeManifest(
-                symbolicName,
-                moduleName,
+                targetBundleId,
+                targetBundleId,
                 moduleVersion,
                 classpathList,
                 basedir,
@@ -114,7 +116,48 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
 
     }
 
-    private static void transferAndIndexLibraries(Path basedir, Path lib, List<String> classpathList) throws IOException {
+    private void patchTargetPom(Path targetBundlesPath, MavenProject project) throws IOException {
+        if (!Files.exists(targetBundlesPath)) {
+            Files.createDirectories(targetBundlesPath);
+        }
+        Path pom = targetBundlesPath.resolve("pom.xml");
+        if (!Files.exists(pom)) {
+            Files.writeString(pom,
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<project\n" +
+                "        xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\"\n" +
+                "        xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
+                "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
+                "    <modelVersion>4.0.0</modelVersion>\n" +
+                "\n" +
+                "    <artifactId>target-bundles</artifactId>\n" +
+                "    <packaging>pom</packaging>\n" +
+                "    <version>1.0.0-SNAPSHOT</version>\n" +
+                "    <parent>\n" +
+                "        <groupId>com.dbeaver.osgi</groupId>\n" +
+                "        <artifactId>dbeaver-deps-p2</artifactId>\n" +
+                "        <version>1.0.0-SNAPSHOT</version>\n" +
+                "        <relativePath>../pom.xml</relativePath>\n" +
+                "    </parent>\n" +
+                "    <modules>\n" +
+                "    </modules>\n" +
+                "</project>",
+                StandardCharsets.UTF_8
+            );
+        }
+        String pomText = Files.readString(pom);
+        String moduleRef = "        <module>" + project.getGroupId() + "." + project.getArtifactId() + "</module>\n";
+        if (pomText.contains(moduleRef)) {
+            return;
+        }
+        int insertPos = pomText.indexOf("    </modules>");
+        pomText = pomText.substring(0, insertPos) +
+            moduleRef +
+            pomText.substring(insertPos);
+        Files.writeString(pom, pomText);
+    }
+
+    private static void transferAndIndexLibraries(Path basedir, Path lib, List<Path> classpathList) throws IOException {
         Path baseLib = basedir.resolve("lib");
         if (Files.exists(baseLib)) {
             try (Stream<Path> list = Files.list(baseLib)) {
@@ -124,7 +167,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    classpathList.add(lib.resolve(p.getFileName()).toAbsolutePath().toString());
+                    classpathList.add(lib.resolve(p.getFileName()));
                 });
             }
         }
@@ -141,7 +184,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         String symbolicName,
         String moduleName,
         String moduleVersion,
-        List<String> classpathList,
+        List<Path> classpathList,
         Path basedir,
         Path fragPath,
         Path manifestPath
@@ -165,7 +208,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         Files.createFile(pom);
         String buildPom  = PomBuilder.buildPom(
             parseResult.groupId,
-            parseResult.artifactId,
+            parseResult.groupId + "." + parseResult.artifactId,
             parseResult.version
         );
         Files.write(pom, buildPom.getBytes());
