@@ -97,7 +97,7 @@ public class DependencyGraphImpl extends DependencyGraph {
         }
         printNode(startNode, "", "", buffer, file);
         flushRemainingBuffer(buffer, file);  // Write any leftover content in the buffer
-        log.info("Generation for {} complete", startNode);
+        log.info("\tGeneration for {} complete", startNode.getName());
     }
 
     // Recursive method to print each node and its dependencies
