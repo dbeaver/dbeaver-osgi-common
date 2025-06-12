@@ -84,9 +84,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             Path targetMetaInf = Files.createDirectories(bundlePath.resolve("META-INF"));
             Path manifestPath = targetMetaInf.resolve("MANIFEST.MF");
             Files.deleteIfExists(manifestPath);
-            if (Files.exists(fragPath) && Files.isRegularFile(fragPath)) {
-                System.out.println("Found FRAG.FMF at: " + fragPath.toAbsolutePath());
-            } else {
+            if (!Files.exists(fragPath) || !Files.isRegularFile(fragPath)) {
                 throw new MojoExecutionException("FRAG.FMF not found in META-INF directory.");
             }
 
@@ -193,7 +191,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         Path basedir,
         Path fragPath,
         Path manifestPath
-    ) throws IOException {
+    ) throws IOException, MojoExecutionException {
         String builtManifest =
             ManifestBuilder.buildManifest(
                 symbolicName,

@@ -1,5 +1,7 @@
 package org.dbeaver.packer.manifest;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +21,7 @@ public class ManifestBuilder {
         List<Path> classpaths,
         Path basedir,
         Path fragPath
-    ) {
+    ) throws MojoExecutionException {
 
         StringBuilder manifest = new StringBuilder();
         manifest.append("Manifest-Version: 1.0\n");
@@ -112,7 +114,8 @@ public class ManifestBuilder {
             """;
     }
 
-    private static void provideDependencies(Path fragPath, StringBuilder manifest, boolean[] hasExportPackage) {
+    private static void provideDependencies(Path fragPath, StringBuilder manifest, boolean[] hasExportPackage)
+    throws MojoExecutionException {
         try (FileInputStream fos = new FileInputStream(fragPath.toFile())) {
             Manifest mf = new Manifest(fos);
             mf.getMainAttributes().forEach((key, value) -> {
@@ -132,7 +135,7 @@ public class ManifestBuilder {
                 manifest.append("\n");
             });
         } catch (Exception e) {
-            System.out.println("Error extracting dependencies: " + e.getMessage());
+            throw new MojoExecutionException("Error extracting dependencies: " + e.getMessage(), e);
         }
     }
 
