@@ -37,5 +37,7 @@ public class ConfigurationConstants {
 
     public static final String FEATURES_FOLDER = "features";
     public static final Object TEST_LIBRARIES = "testLibraries";
+
+    public static final Object MAVEN_MODULES = "mavenModules";
     public static final String ASSOCIATED_PROPERTIES = "associateProperties";
 }

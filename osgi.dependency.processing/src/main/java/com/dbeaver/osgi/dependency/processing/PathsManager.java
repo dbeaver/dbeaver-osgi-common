@@ -44,6 +44,7 @@ public enum PathsManager {
     private List<Path> additionalLibraries;
     private Path imlModules;
     private List<Path> additionalIMlModules;
+    private Set<Path> mavenModules;
     private List<Path> ideaConfigurationFiles;
     private Path projectsFolderPath;
     private String workspaceName;
@@ -108,6 +109,14 @@ public enum PathsManager {
                 .map(projectsFolderPath::resolve)
                 .filter(FileUtils::exists)
                 .collect(Collectors.toList());
+        }
+        String mavenModulesString = (String) settings.get(ConfigurationConstants.MAVEN_MODULES);
+        if (mavenModulesString != null) {
+            mavenModules = Arrays.stream(mavenModulesString.split(";"))
+                .map(String::trim)
+                .map(projectsFolderPath::resolve)
+                .filter(FileUtils::exists)
+                .collect(Collectors.toSet());
         }
         var bundlesPathsString = (String) settings.get(ConfigurationConstants.BUNDLES_PATHS_PARAM);
         bundlesPaths = Stream.concat(
@@ -229,6 +238,10 @@ public enum PathsManager {
 
     public @Nonnull Collection<Path> getModulesRoots() {
         return modulesRoots;
+    }
+
+    public @Nonnull Collection<Path> getMavenModules() {
+        return mavenModules;
     }
 
     public @Nonnull Collection<Path> getBundlesLocations() {
