@@ -17,6 +17,7 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <modules>
+        <module>com.dbeaver.maven.p2.collector</module>
         <module>osgi.dependency.processing</module>
         <module>maven-osgi-packer</module>
     </modules>
