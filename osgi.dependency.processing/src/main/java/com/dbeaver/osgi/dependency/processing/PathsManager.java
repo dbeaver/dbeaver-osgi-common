@@ -24,6 +24,7 @@ import org.jkiss.code.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,6 +52,7 @@ public enum PathsManager {
     private List<Path> additionalRepositoriesPaths;
     private Set<String> testLibraries;
     private Set<Path> excludePaths;
+    private Path mavenRepoPath;
 
     private Map<String, Set<String>> associatedProperties;
 
@@ -65,6 +67,8 @@ public enum PathsManager {
         if (eclipsePath == null) {
             eclipsePath = projectsFolderPath.resolve(ConfigurationConstants.DEFAULT_WORKSPACE_LOCATION);
         }
+        this.mavenRepoPath = Paths.get(System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository"));
+
         this.eclipsePath = eclipsePath;
         eclipsePluginsPath = eclipsePath.resolve(ConfigurationConstants.PLUGINS_FOLDER);
 
@@ -289,6 +293,11 @@ public enum PathsManager {
     @NotNull
     public Path getImlModulesPath() {
         return imlModules;
+    }
+
+    @NotNull
+    public Path getMavenRepoPath() {
+        return mavenRepoPath;
     }
 
     @Nullable
