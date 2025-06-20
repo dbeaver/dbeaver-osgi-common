@@ -19,6 +19,7 @@ package org.dbeaver.packer;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -42,8 +43,10 @@ import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-@Mojo(name = "create-osgi-bundle")
+@Mojo(name = "create-osgi-bundle", defaultPhase = LifecyclePhase.PACKAGE, threadSafe = true)
 public class MavenOSGIFragmentPacker extends AbstractMojo {
+    private static final Object GLOBAL_SYNC = new Object();
+
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
@@ -116,44 +119,47 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
     }
 
     private void patchTargetPom(Path targetBundlesPath, MavenProject project) throws IOException {
-        if (!Files.exists(targetBundlesPath)) {
-            Files.createDirectories(targetBundlesPath);
+        synchronized (GLOBAL_SYNC) {
+            if (!Files.exists(targetBundlesPath)) {
+                Files.createDirectories(targetBundlesPath);
+            }
+            Path pom = targetBundlesPath.resolve("pom.xml");
+            if (!Files.exists(pom)) {
+                Files.writeString(
+                    pom,
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                        "<project\n" +
+                        "        xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\"\n" +
+                        "        xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
+                        "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
+                        "    <modelVersion>4.0.0</modelVersion>\n" +
+                        "\n" +
+                        "    <artifactId>target-bundles</artifactId>\n" +
+                        "    <packaging>pom</packaging>\n" +
+                        "    <version>1.0.0-SNAPSHOT</version>\n" +
+                        "    <parent>\n" +
+                        "        <groupId>com.dbeaver.osgi</groupId>\n" +
+                        "        <artifactId>p2</artifactId>\n" +
+                        "        <version>1.0.0-SNAPSHOT</version>\n" +
+                        "        <relativePath>../p2/pom.xml</relativePath>\n" +
+                        "    </parent>\n" +
+                        "    <modules>\n" +
+                        "    </modules>\n" +
+                        "</project>",
+                    StandardCharsets.UTF_8
+                );
+            }
+            String pomText = Files.readString(pom);
+            String moduleRef = "        <module>" + project.getGroupId() + "." + project.getArtifactId() + "</module>\n";
+            if (pomText.contains(moduleRef)) {
+                return;
+            }
+            int insertPos = pomText.indexOf("    </modules>");
+            pomText = pomText.substring(0, insertPos) +
+                moduleRef +
+                pomText.substring(insertPos);
+            Files.writeString(pom, pomText);
         }
-        Path pom = targetBundlesPath.resolve("pom.xml");
-        if (!Files.exists(pom)) {
-            Files.writeString(pom,
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<project\n" +
-                "        xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\"\n" +
-                "        xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
-                "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
-                "    <modelVersion>4.0.0</modelVersion>\n" +
-                "\n" +
-                "    <artifactId>target-bundles</artifactId>\n" +
-                "    <packaging>pom</packaging>\n" +
-                "    <version>1.0.0-SNAPSHOT</version>\n" +
-                "    <parent>\n" +
-                "        <groupId>com.dbeaver.osgi</groupId>\n" +
-                "        <artifactId>p2</artifactId>\n" +
-                "        <version>1.0.0-SNAPSHOT</version>\n" +
-                "        <relativePath>../p2/pom.xml</relativePath>\n" +
-                "    </parent>\n" +
-                "    <modules>\n" +
-                "    </modules>\n" +
-                "</project>",
-                StandardCharsets.UTF_8
-            );
-        }
-        String pomText = Files.readString(pom);
-        String moduleRef = "        <module>" + project.getGroupId() + "." + project.getArtifactId() + "</module>\n";
-        if (pomText.contains(moduleRef)) {
-            return;
-        }
-        int insertPos = pomText.indexOf("    </modules>");
-        pomText = pomText.substring(0, insertPos) +
-            moduleRef +
-            pomText.substring(insertPos);
-        Files.writeString(pom, pomText);
     }
 
     private static void transferAndIndexLibraries(Path basedir, Path targetLibDir, List<Path> classpathList)
