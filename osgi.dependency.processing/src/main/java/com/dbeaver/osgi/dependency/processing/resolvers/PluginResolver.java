@@ -180,13 +180,13 @@ public class PluginResolver {
                         .filter(Objects::nonNull)
                         .toList();
                     if (!bundleInfos.isEmpty()) {
-                        bundleByName = new HashSet<>(bundleInfos);
+                        bundleByName = new LinkedHashSet<>(bundleInfos);
                         for (BundleInfo bundleInfo : bundleByName) {
                             result.addBundle(bundleInfo);
                             testLibrariesBundles.add(bundleInfo);
                         }
                     } else {
-                        bundleByName = new HashSet<>(bundleInfos);
+                        bundleByName = new LinkedHashSet<>(bundleInfos);
                         Collection<RemoteP2BundleInfo> remoteBundlesByName = lookupCache.getRemoteBundlesByName(
                             testLibrary);
                         Optional<RemoteP2BundleInfo> remoteP2BundleInfo = remoteBundlesByName.stream().findFirst();

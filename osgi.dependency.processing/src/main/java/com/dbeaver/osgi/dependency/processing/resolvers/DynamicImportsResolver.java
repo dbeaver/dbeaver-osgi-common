@@ -22,14 +22,14 @@ import com.dbeaver.osgi.dependency.processing.Result;
 import com.dbeaver.osgi.dependency.processing.inter.IImportListener;
 import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
+import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.jkiss.code.NotNull;
-import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
-import com.dbeaver.osgi.dependency.processing.util.Version;
 import org.jkiss.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,7 +276,7 @@ public class DynamicImportsResolver {
 
         @Override
         public void addBundle(@Nonnull BundleInfo bundleInfo) {
-            newBundlesByNames.computeIfAbsent(bundleInfo.getBundleName(), it -> new HashSet<>()).add(bundleInfo);
+            newBundlesByNames.computeIfAbsent(bundleInfo.getBundleName(), it -> new LinkedHashSet<>()).add(bundleInfo);
         }
 
         @Override

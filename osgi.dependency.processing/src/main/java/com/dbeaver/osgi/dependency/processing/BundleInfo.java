@@ -16,11 +16,11 @@
  */
 package com.dbeaver.osgi.dependency.processing;
 
+import com.dbeaver.osgi.dependency.processing.util.Version;
+import com.dbeaver.osgi.dependency.processing.util.VersionRange;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.jkiss.code.NotNull;
-import com.dbeaver.osgi.dependency.processing.util.Version;
-import com.dbeaver.osgi.dependency.processing.util.VersionRange;
 import org.jkiss.utils.Pair;
 
 import java.nio.file.Path;
@@ -77,7 +77,7 @@ public class BundleInfo implements ModuleInfo {
     // E.g. jakarta.annotation-api of different versions (1.x and 2.x) are completely different and export different packages
     // Thus we need all versions
     private String additionalVersions;
-    private final Set<BundleInfo> fragments = new HashSet<>();
+    private final Set<BundleInfo> fragments = new LinkedHashSet<>();
 
     public BundleInfo(
         @Nullable Path path,

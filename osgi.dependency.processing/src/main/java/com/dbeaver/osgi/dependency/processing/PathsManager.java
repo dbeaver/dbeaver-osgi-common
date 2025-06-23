@@ -126,7 +126,7 @@ public enum PathsManager {
         Stream<Path> allModules = Stream.concat(Arrays.stream(bundlesPathsString.split(";"))
             .map(Path::of), Arrays.stream(featuresPathsString.split(";")).map(Path::of));
         Set<Path> collect = allModules.collect(Collectors.toSet());
-        Set<Path> set = new HashSet<>();
+        Set<Path> set = new LinkedHashSet<>();
         for (Path path : collect) {
             Path root = path;
             while (root.getParent() != null) {

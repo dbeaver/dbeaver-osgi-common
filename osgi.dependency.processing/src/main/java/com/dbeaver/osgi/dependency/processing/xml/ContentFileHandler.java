@@ -20,11 +20,11 @@ import com.dbeaver.osgi.dependency.processing.BundleInfo;
 import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.RemoteP2Feature;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
-import org.jkiss.code.NotNull;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2Repository;
 import com.dbeaver.osgi.dependency.processing.util.DependencyInformation;
 import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
+import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.utils.CommonUtils;
 import org.jkiss.utils.Pair;
@@ -34,7 +34,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -55,9 +55,9 @@ public class ContentFileHandler extends DefaultHandler {
 
     private ParserState currentState = ParserState.ROOT;
     private ContentType currentContentType = null;
-    private final Set<RemoteP2BundleInfo> remoteP2BundleInfos = new HashSet<>();
+    private final Set<RemoteP2BundleInfo> remoteP2BundleInfos = new LinkedHashSet<>();
 
-    private final Set<RemoteP2Feature> remoteP2Features = new HashSet<>();
+    private final Set<RemoteP2Feature> remoteP2Features = new LinkedHashSet<>();
     private UnitInformation currentUnit;
     private String artifactID;
 
