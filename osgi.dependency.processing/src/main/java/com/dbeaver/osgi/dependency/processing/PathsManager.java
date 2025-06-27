@@ -24,6 +24,7 @@ import org.jkiss.code.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,12 +45,14 @@ public enum PathsManager {
     private List<Path> additionalLibraries;
     private Path imlModules;
     private List<Path> additionalIMlModules;
+    private Set<Path> mavenModules;
     private List<Path> ideaConfigurationFiles;
     private Path projectsFolderPath;
     private String workspaceName;
     private List<Path> additionalRepositoriesPaths;
     private Set<String> testLibraries;
     private Set<Path> excludePaths;
+    private Path mavenRepoPath;
 
     private Map<String, Set<String>> associatedProperties;
 
@@ -64,6 +67,8 @@ public enum PathsManager {
         if (eclipsePath == null) {
             eclipsePath = projectsFolderPath.resolve(ConfigurationConstants.DEFAULT_WORKSPACE_LOCATION);
         }
+        this.mavenRepoPath = Paths.get(System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository"));
+
         this.eclipsePath = eclipsePath;
         eclipsePluginsPath = eclipsePath.resolve(ConfigurationConstants.PLUGINS_FOLDER);
 
@@ -108,6 +113,14 @@ public enum PathsManager {
                 .map(projectsFolderPath::resolve)
                 .filter(FileUtils::exists)
                 .collect(Collectors.toList());
+        }
+        String mavenModulesString = (String) settings.get(ConfigurationConstants.MAVEN_MODULES);
+        if (mavenModulesString != null) {
+            mavenModules = Arrays.stream(mavenModulesString.split(";"))
+                .map(String::trim)
+                .map(projectsFolderPath::resolve)
+                .filter(FileUtils::exists)
+                .collect(Collectors.toSet());
         }
         var bundlesPathsString = (String) settings.get(ConfigurationConstants.BUNDLES_PATHS_PARAM);
         bundlesPaths = Stream.concat(
@@ -231,6 +244,10 @@ public enum PathsManager {
         return modulesRoots;
     }
 
+    public @Nonnull Collection<Path> getMavenModules() {
+        return mavenModules;
+    }
+
     public @Nonnull Collection<Path> getBundlesLocations() {
         return bundlesPaths;
     }
@@ -276,6 +293,11 @@ public enum PathsManager {
     @NotNull
     public Path getImlModulesPath() {
         return imlModules;
+    }
+
+    @NotNull
+    public Path getMavenRepoPath() {
+        return mavenRepoPath;
     }
 
     @Nullable
