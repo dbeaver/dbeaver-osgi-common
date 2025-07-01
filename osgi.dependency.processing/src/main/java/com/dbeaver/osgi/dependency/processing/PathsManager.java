@@ -244,7 +244,9 @@ public enum PathsManager {
         return modulesRoots;
     }
 
-    public @Nonnull Collection<Path> getMavenModules() {
+
+    @Nullable
+    public Collection<Path> getMavenModules() {
         return mavenModules;
     }
 
