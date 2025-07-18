@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLConnection;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -264,13 +265,15 @@ public class FileUtils {
     }
 
     public static boolean tryToLoadFile(@NotNull URI artifactsURI) throws IOException, URISyntaxException {
-        HttpURLConnection httpURLConnection = (HttpURLConnection) artifactsURI.toURL().openConnection();
-        boolean fileExist = httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK;
-        httpURLConnection.connect();
+        URLConnection urlConnection = artifactsURI.toURL().openConnection();
+        boolean fileExist = !(urlConnection instanceof HttpURLConnection httpCon) || httpCon.getResponseCode() == HttpURLConnection.HTTP_OK;
+        urlConnection.connect();
         try {
-            fileExist = fileExist & httpURLConnection.getURL().toURI().equals(artifactsURI);
+            fileExist = fileExist & urlConnection.getURL().toURI().equals(artifactsURI);
         } finally {
-            httpURLConnection.disconnect();
+            if (urlConnection instanceof HttpURLConnection httpCon) {
+                httpCon.disconnect();
+            }
         }
         return fileExist;
     }
