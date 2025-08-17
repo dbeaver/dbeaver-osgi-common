@@ -16,11 +16,11 @@
  */
 package com.dbeaver.osgi.dependency.processing;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
 import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.jkiss.utils.Pair;
 
 import java.io.File;
@@ -53,12 +53,12 @@ public class Result {
         String bundleName = bundleInfo.getBundleName();
         Set<BundleInfo> oldInfo = bundlesByNames.get(bundleName);
         if (oldInfo == null) {
-            bundlesByNames.computeIfAbsent(bundleName, it -> new HashSet<>()).add(bundleInfo);
+            bundlesByNames.computeIfAbsent(bundleName, it -> new LinkedHashSet<>()).add(bundleInfo);
             return;
         }
         Optional<BundleInfo> oldBundle = oldInfo.stream().filter(it -> it.getBundleVersion().equals(bundleInfo.getBundleVersion())).findFirst();
         if (oldBundle.isEmpty()) {
-            bundlesByNames.computeIfAbsent(bundleName, it -> new HashSet<>()).add(bundleInfo);
+            bundlesByNames.computeIfAbsent(bundleName, it -> new LinkedHashSet<>()).add(bundleInfo);
         } else if (oldBundle.get().getBundleVersion().equals(bundleInfo.getBundleVersion())) {
             // Do nothing
             if (bundleInfo.getStartLevel() != null && !Objects.equals(oldBundle.get().getStartLevel(), bundleInfo.getStartLevel())) {

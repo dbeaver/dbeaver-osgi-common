@@ -18,16 +18,17 @@ package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.PathsManager;
 import com.dbeaver.osgi.dependency.processing.Result;
-import jakarta.annotation.Nonnull;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.events.StartElement;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.StartElement;
 
 class ProjectXmlReaderExtension extends XmlReaderExtension {
 
@@ -45,11 +46,11 @@ class ProjectXmlReaderExtension extends XmlReaderExtension {
         switch (nameLocalPart) {
             case "product": {
                 result.setProductInfo(
-                    startElement.getAttributeByName(new QName("", "name")).getValue(),
-                    startElement.getAttributeByName(new QName("", "uid")).getValue(),
-                    startElement.getAttributeByName(new QName("", "id")).getValue(),
-                    startElement.getAttributeByName(new QName("", "application")).getValue(),
-                    startElement.getAttributeByName(new QName("", "version")).getValue());
+                    getAttributeValue(startElement, "name"),
+                    getAttributeValue(startElement, "uid"),
+                    getAttributeValue(startElement, "id"),
+                    getAttributeValue(startElement, "application"),
+                    getAttributeValue(startElement, "version"));
                 break;
             }
             case "feature": {
@@ -79,5 +80,10 @@ class ProjectXmlReaderExtension extends XmlReaderExtension {
                 break;
             }
         }
+    }
+
+    private String getAttributeValue(@Nonnull StartElement element, @Nonnull String name) {
+        Attribute attribute = element.getAttributeByName(new QName("", name));
+        return attribute == null ? null : attribute.getValue();
     }
 }
