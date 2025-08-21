@@ -17,14 +17,14 @@
 package com.dbeaver.osgi.dependency.processing.p2;
 
 import com.dbeaver.osgi.dependency.processing.p2.repository.IRepository;
-import com.dbeaver.osgi.dependency.processing.p2.repository.exception.RepositoryInitialisationError;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2Repository;
+import com.dbeaver.osgi.dependency.processing.p2.repository.exception.RepositoryInitialisationError;
 import com.dbeaver.osgi.dependency.processing.xml.ContentParserXmlExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -54,13 +54,8 @@ public class P2RepositoryManager {
         try {
             for (String s : repositories) {
                 String trim = s.trim();
-                URI uri = new URI(trim);
-                try {
-                    URL url = uri.toURL();
-                    list.add(new RemoteP2Repository(url));
-                } catch (MalformedURLException e) {
-                    throw new UnsupportedOperationException("Local p2 repositories are not supported");
-                }
+                URL url = new URL(trim);
+                list.add(new RemoteP2Repository(url));
             }
         } catch (Exception error) {
             throw new RepositoryInitialisationError("Error during repository indexing", error);
