@@ -53,11 +53,12 @@ public class PluginResolver {
         @Nonnull Pair<String, VersionRange> bundleInfo,
         @Nullable Integer startLevel,
         P2BundleLookupCache cache,
-        DependencyGraph graph) throws IOException {
+        DependencyGraph graph
+    ) throws IOException {
         if (PackageChecker.INSTANCE.isPackageExcluded(bundleInfo.getFirst())) {
             return;
         }
-
+        //System.out.println("\t\t-Process bundle " + bundleInfo.getFirst());
         FeatureInfo currentFeature = FeatureResolver.getCurrentFeature(result.getProductPath());
 
         var previousParsedBundle = result.getBundleByInfoAndVersion(bundleInfo);

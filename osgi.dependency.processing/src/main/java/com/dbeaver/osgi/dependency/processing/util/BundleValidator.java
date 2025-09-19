@@ -7,6 +7,7 @@ import java.util.List;
 public class BundleValidator {
     public static final List<String> PACKAGES_FOR_DEV_PROPERTIES = List.of(
         "org.jkiss",
+        "org.dbvr",
         "io.cloudbeaver",
         "com.dbeaver",
         "swtbot-simple",
