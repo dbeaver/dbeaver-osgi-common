@@ -16,7 +16,7 @@
  */
 package com.dbeaver.osgi.dependency.processing;
 
-import jakarta.annotation.Nonnull;
+import org.jkiss.code.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ public class ConfigFileManager {
 
     private static final String CONFIG_FILE_NAME = "config.properties";
 
-    public static @Nonnull Properties readSettingsFile(Path configFilePath) throws IOException {
+    public static @NotNull Properties readSettingsFile(Path configFilePath) throws IOException {
         if (!Files.exists(configFilePath)) {
             throw new IOException("Config file '" + configFilePath.toAbsolutePath() + "' not found");
         }

@@ -18,26 +18,26 @@ package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.Result;
 import com.dbeaver.osgi.dependency.processing.p2.P2RepositoryManager;
-import jakarta.annotation.Nonnull;
 import com.dbeaver.osgi.dependency.processing.resolvers.PluginResolver;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import org.jkiss.code.NotNull;
 import org.jkiss.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
-import java.io.IOException;
 
 class PluginXmlReaderExtension extends XmlReaderExtension {
 
     private static final Logger log = LoggerFactory.getLogger(PluginXmlReaderExtension.class);
 
     static void resolvePlugin(
-        @Nonnull Result result,
-        @Nonnull StartElement startElement,
-        @Nonnull Attribute idAttr,
+        @NotNull Result result,
+        @NotNull StartElement startElement,
+        @NotNull Attribute idAttr,
         DependencyGraph graph
     ) {
         var startLevelAttr = startElement.getAttributeByName(START_LEVEL_ATTR_NAME);
@@ -59,8 +59,8 @@ class PluginXmlReaderExtension extends XmlReaderExtension {
 
     @Override
     public void resolveStartElement(
-        @Nonnull Result result,
-        @Nonnull StartElement startElement,
+        @NotNull Result result,
+        @NotNull StartElement startElement,
         XMLEventReader reader,
         DependencyGraph graph
     ) {

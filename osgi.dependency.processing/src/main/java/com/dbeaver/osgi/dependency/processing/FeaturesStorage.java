@@ -16,8 +16,8 @@
  */
 package com.dbeaver.osgi.dependency.processing;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jkiss.code.NotNull;
+import org.jkiss.code.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public class FeaturesStorage {
 
     private final Map<String, File> xmlFilesByFeaturesNames = new LinkedHashMap<>();
 
-    public void importData(@Nonnull Collection<Path> featuresPaths) {
+    public void importData(@NotNull Collection<Path> featuresPaths) {
         for (var featuresFolderPath : featuresPaths) {
             var folders = featuresFolderPath.toFile().listFiles(File::isDirectory);
             if (folders == null) {
@@ -55,7 +55,7 @@ public class FeaturesStorage {
         }
     }
 
-    public @Nullable File getFeatureXml(@Nonnull String featureName) {
+    public @Nullable File getFeatureXml(@NotNull String featureName) {
         return xmlFilesByFeaturesNames.get(featureName);
     }
 }

@@ -16,11 +16,11 @@
  */
 package com.dbeaver.osgi.dependency.processing;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
 import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
+import org.jkiss.code.NotNull;
+import org.jkiss.code.Nullable;
 import org.jkiss.utils.Pair;
 
 import java.io.File;
@@ -45,11 +45,11 @@ public class Result {
     private DependencyGraph productGraph;
     private String version;
 
-    public FeatureInfo addResolvedFeature(@Nonnull String featureName, File featureXmlFile) {
+    public FeatureInfo addResolvedFeature(@NotNull String featureName, File featureXmlFile) {
         return resolvedFeatures.computeIfAbsent(featureName, s -> new FeatureInfo(featureName, featureXmlFile));
     }
 
-    public void addBundle(@Nonnull BundleInfo bundleInfo) {
+    public void addBundle(@NotNull BundleInfo bundleInfo) {
         String bundleName = bundleInfo.getBundleName();
         Set<BundleInfo> oldInfo = bundlesByNames.get(bundleName);
         if (oldInfo == null) {
@@ -68,15 +68,15 @@ public class Result {
         }
     }
 
-    public boolean isFeatureResolved(@Nonnull String featureName) {
+    public boolean isFeatureResolved(@NotNull String featureName) {
         return resolvedFeatures.containsKey(featureName);
     }
 
-    public boolean isPluginResolved(@Nonnull String pluginName) {
+    public boolean isPluginResolved(@NotNull String pluginName) {
         return bundlesByNames.containsKey(pluginName);
     }
 
-    public @Nullable Set<BundleInfo> getBundlesByName(@Nonnull String name) {
+    public @Nullable Set<BundleInfo> getBundlesByName(@NotNull String name) {
         return bundlesByNames.get(name);
     }
 
@@ -88,7 +88,7 @@ public class Result {
             isVersionsCompatible(bundle.getSecond(), new Version(it.getBundleVersion()))).findFirst().orElse(null);
     }
 
-    public @Nonnull Map<String, Set<BundleInfo>> getBundlesByNames() {
+    public @NotNull Map<String, Set<BundleInfo>> getBundlesByNames() {
         return bundlesByNames;
     }
 
@@ -100,7 +100,7 @@ public class Result {
         return osgiSplashPath;
     }
 
-    public void setOsgiSplashPath(@Nonnull Path osgiSplashPath) {
+    public void setOsgiSplashPath(@NotNull Path osgiSplashPath) {
         this.osgiSplashPath = osgiSplashPath;
     }
 

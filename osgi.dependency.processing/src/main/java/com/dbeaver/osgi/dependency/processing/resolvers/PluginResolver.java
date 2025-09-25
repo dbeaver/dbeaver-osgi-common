@@ -21,9 +21,8 @@ import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.P2RepositoryManager;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
 import com.dbeaver.osgi.dependency.processing.util.*;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.jkiss.code.NotNull;
+import org.jkiss.code.Nullable;
 import org.jkiss.utils.CommonUtils;
 import org.jkiss.utils.Pair;
 import org.slf4j.Logger;
@@ -49,8 +48,8 @@ public class PluginResolver {
     );
 
     public static void resolvePluginDependencies(
-        @Nonnull Result result,
-        @Nonnull Pair<String, VersionRange> bundleInfo,
+        @NotNull Result result,
+        @NotNull Pair<String, VersionRange> bundleInfo,
         @Nullable Integer startLevel,
         P2BundleLookupCache cache,
         DependencyGraph graph
@@ -132,7 +131,7 @@ public class PluginResolver {
         }
     }
 
-    private static @Nonnull String correctFolderName(@Nonnull String nameToCorrect) {
+    private static @NotNull String correctFolderName(@NotNull String nameToCorrect) {
         var correctedName = correctedFolderNames.get(nameToCorrect);
         return correctedName == null
             ? nameToCorrect
@@ -140,7 +139,7 @@ public class PluginResolver {
     }
 
     private static @Nullable BundleInfo extractBundleInfo(
-        @Nonnull File pluginJarOrFolder,
+        @NotNull File pluginJarOrFolder,
         @Nullable Integer startLevel
     ) {
         try {
@@ -243,8 +242,8 @@ public class PluginResolver {
         }
 
     private static void parseBundleInfo(
-        @Nonnull Result result,
-        @Nonnull BundleInfo bundleInfo,
+        @NotNull Result result,
+        @NotNull BundleInfo bundleInfo,
         P2BundleLookupCache cache,
         DependencyGraph graph
     ) throws IOException {

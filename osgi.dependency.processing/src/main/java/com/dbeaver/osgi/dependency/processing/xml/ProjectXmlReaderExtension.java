@@ -18,16 +18,16 @@ package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.PathsManager;
 import com.dbeaver.osgi.dependency.processing.Result;
-import jakarta.annotation.Nonnull;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import org.jkiss.code.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 class ProjectXmlReaderExtension extends XmlReaderExtension {
 
@@ -36,7 +36,7 @@ class ProjectXmlReaderExtension extends XmlReaderExtension {
     private static final QName LOCATION_NAME = new QName("", "location");
 
     @Override
-    public void resolveStartElement(@Nonnull Result result, @Nonnull StartElement startElement, XMLEventReader reader,
+    public void resolveStartElement(@NotNull Result result, @NotNull StartElement startElement, XMLEventReader reader,
                                     DependencyGraph graph) {
         if (!matchesDeclaredOS(startElement)) {
             return;

@@ -17,7 +17,6 @@
 package com.dbeaver.osgi.dependency.processing;
 
 import com.dbeaver.osgi.dependency.processing.util.FileUtils;
-import jakarta.annotation.Nonnull;
 import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 
@@ -59,10 +58,10 @@ public enum PathsManager {
     private Map<String, Map<String, String>> propertyArray = new LinkedHashMap<>();
 
     public void init(
-        @Nonnull Properties settings,
-        @Nonnull Path projectsFolderPath,
+        @NotNull Properties settings,
+        @NotNull Path projectsFolderPath,
         @Nullable Path eclipsePath,
-        @Nonnull Path... additionalBundlesPaths
+        @NotNull Path... additionalBundlesPaths
     ) throws IOException {
         if (eclipsePath == null) {
             eclipsePath = projectsFolderPath.resolve(ConfigurationConstants.DEFAULT_WORKSPACE_LOCATION);
@@ -236,11 +235,11 @@ public enum PathsManager {
         return list;
     }
 
-    public @Nonnull Collection<Path> getFeaturesLocations() {
+    public @NotNull Collection<Path> getFeaturesLocations() {
         return featuresPaths;
     }
 
-    public @Nonnull Collection<Path> getModulesRoots() {
+    public @NotNull Collection<Path> getModulesRoots() {
         return modulesRoots;
     }
 
@@ -250,23 +249,23 @@ public enum PathsManager {
         return mavenModules;
     }
 
-    public @Nonnull Collection<Path> getBundlesLocations() {
+    public @NotNull Collection<Path> getBundlesLocations() {
         return bundlesPaths;
     }
 
-    public @Nonnull Collection<Path> getTestBundlesPaths() {
+    public @NotNull Collection<Path> getTestBundlesPaths() {
         return testBundlesPaths;
     }
 
-    public @Nonnull Path getEclipsePath() {
+    public @NotNull Path getEclipsePath() {
         return eclipsePath;
     }
 
-    public @Nonnull Path getTreeOutputFolder() {
+    public @NotNull Path getTreeOutputFolder() {
         return eclipsePath.getParent().resolve(ConfigurationConstants.TREE_OUTPUT);
     }
 
-    public @Nonnull Path getEclipsePluginsPath() {
+    public @NotNull Path getEclipsePluginsPath() {
         return eclipsePluginsPath;
     }
 
@@ -348,7 +347,7 @@ public enum PathsManager {
         return valuesSet;
     }
 
-    private Map<String, String> loadNewProperty(@Nonnull String property, @Nonnull Properties properties) {
+    private Map<String, String> loadNewProperty(@NotNull String property, @NotNull Properties properties) {
         String propertyString = properties.getProperty(property);
         return Arrays.stream(propertyString.split(";"))
             .map(pair -> pair.split("=", 2))  // Split each key=value pair

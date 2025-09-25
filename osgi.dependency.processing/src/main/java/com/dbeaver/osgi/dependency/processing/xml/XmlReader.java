@@ -17,15 +17,15 @@
 package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.Result;
-import jakarta.annotation.Nonnull;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import org.jkiss.code.NotNull;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 
 public enum XmlReader {
     INSTANCE();
@@ -40,8 +40,8 @@ public enum XmlReader {
     };
 
     public void parseXmlFile(
-        @Nonnull Result result,
-        @Nonnull File xmlFile,
+        @NotNull Result result,
+        @NotNull File xmlFile,
         DependencyGraph graph
     ) throws IOException, XMLStreamException {
         try (var inputStream = new FileInputStream(xmlFile);

@@ -22,14 +22,13 @@ import com.dbeaver.osgi.dependency.processing.Result;
 import com.dbeaver.osgi.dependency.processing.inter.IImportListener;
 import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
+import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.jkiss.code.NotNull;
-import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
-import com.dbeaver.osgi.dependency.processing.util.Version;
+import org.jkiss.code.Nullable;
 import org.jkiss.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ public class DynamicImportsResolver {
         this.importListener = importListener;
     }
 
-    public void start(@Nonnull Result result, P2BundleLookupCache lookupCache, DependencyGraph graph) throws IOException {
+    public void start(@NotNull Result result, P2BundleLookupCache lookupCache, DependencyGraph graph) throws IOException {
         var eclipsePluginsByExportedPackages = readEclipsePluginsExportedPackages(PathsManager.INSTANCE.getEclipsePluginsPath());
 
         MultiValuedMap<String, Pair<BundleInfo, Version>> parsedBundlesByExportedPackages = new ArrayListValuedHashMap<>();
@@ -110,13 +109,13 @@ public class DynamicImportsResolver {
     }
 
     private void resolveImportPackages(
-        @Nonnull Result result,
-        @Nonnull MultiValuedMap<String, Pair<BundleInfo, Version>> eclipsePluginsByExportedPackages,
-        @Nonnull MultiValuedMap<String, Pair<BundleInfo, Version>> parsedResultPluginsByExportedPackages,
-        @Nonnull BundleInfo bundleInfo,
-        @Nonnull MultiValuedMap<Pair<String, VersionRange>, BundleInfo> bundlesToAddByImportPackage,
-        @Nonnull P2BundleLookupCache lookupCache,
-        @Nonnull DependencyGraph graph
+        @NotNull Result result,
+        @NotNull MultiValuedMap<String, Pair<BundleInfo, Version>> eclipsePluginsByExportedPackages,
+        @NotNull MultiValuedMap<String, Pair<BundleInfo, Version>> parsedResultPluginsByExportedPackages,
+        @NotNull BundleInfo bundleInfo,
+        @NotNull MultiValuedMap<Pair<String, VersionRange>, BundleInfo> bundlesToAddByImportPackage,
+        @NotNull P2BundleLookupCache lookupCache,
+        @NotNull DependencyGraph graph
     ) throws IOException {
         for (var packageToImport : bundleInfo.getImportPackages()) {
             List<Pair<BundleInfo, Version>> suitableParsedBundles = getSuitableBundles(parsedResultPluginsByExportedPackages, packageToImport);
@@ -210,8 +209,8 @@ public class DynamicImportsResolver {
         return bundlesByExportedPackages.get(packageToImport.getFirst()).stream().filter(it -> VersionRange.isVersionsCompatible(packageToImport.getSecond(), it.getSecond())).toList();
     }
 
-    private @Nonnull MultiValuedMap<String, Pair<BundleInfo, Version>> readEclipsePluginsExportedPackages(
-        @Nonnull Path eclipsePluginsPath
+    private @NotNull MultiValuedMap<String, Pair<BundleInfo, Version>> readEclipsePluginsExportedPackages(
+        @NotNull Path eclipsePluginsPath
     ) throws IOException {
 
         var eclipsePluginsFolder = eclipsePluginsPath.toFile();
@@ -260,7 +259,7 @@ public class DynamicImportsResolver {
         private final Result previousResult;
         private final Map<String, Set<BundleInfo>> newBundlesByNames;
 
-        DynamicImportResult(@Nonnull Result previousResult) {
+        DynamicImportResult(@NotNull Result previousResult) {
             this.previousResult = previousResult;
             this.newBundlesByNames = new LinkedHashMap<>();
         }
@@ -275,25 +274,25 @@ public class DynamicImportsResolver {
         }
 
         @Override
-        public void addBundle(@Nonnull BundleInfo bundleInfo) {
+        public void addBundle(@NotNull BundleInfo bundleInfo) {
             newBundlesByNames.computeIfAbsent(bundleInfo.getBundleName(), it -> new HashSet<>()).add(bundleInfo);
         }
 
         @Override
-        public boolean isPluginResolved(@Nonnull String pluginName) {
+        public boolean isPluginResolved(@NotNull String pluginName) {
             return newBundlesByNames.containsKey(pluginName) || previousResult.isPluginResolved(pluginName);
         }
 
         @Nullable
         @Override
-        public Set<BundleInfo> getBundlesByName(@Nonnull String name) {
+        public Set<BundleInfo> getBundlesByName(@NotNull String name) {
             var newBundle = newBundlesByNames.get(name);
             return newBundle != null
                 ? newBundle
                 : previousResult.getBundlesByName(name);
         }
 
-        @Nonnull
+        @NotNull
         @Override
         public Map<String, Set<BundleInfo>> getBundlesByNames() {
             Map<String, Set<BundleInfo>> result = new LinkedHashMap<>(newBundlesByNames);
