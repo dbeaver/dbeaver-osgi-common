@@ -16,11 +16,10 @@
  */
 package com.dbeaver.osgi.dependency.processing;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
-import org.jkiss.code.NotNull;
 import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
+import org.jkiss.code.NotNull;
+import org.jkiss.code.Nullable;
 import org.jkiss.utils.Pair;
 
 import java.nio.file.Path;
@@ -81,14 +80,14 @@ public class BundleInfo implements ModuleInfo {
 
     public BundleInfo(
         @Nullable Path path,
-        @Nonnull String bundleName,
-        @Nonnull String bundleVersion,
-        @Nonnull List<String> classpathLibs,
-        @Nonnull List<Pair<String, VersionRange>> requireBundles,
-        @Nonnull Set<String> reexportedBundles,
-        @Nonnull Set<Pair<String, Version>> exportPackages,
-        @Nonnull Set<Pair<String, VersionRange>> importPackages,
-        @Nonnull List<String> requiredFragments,
+        @NotNull String bundleName,
+        @NotNull String bundleVersion,
+        @NotNull List<String> classpathLibs,
+        @NotNull List<Pair<String, VersionRange>> requireBundles,
+        @NotNull Set<String> reexportedBundles,
+        @NotNull Set<Pair<String, Version>> exportPackages,
+        @NotNull Set<Pair<String, VersionRange>> importPackages,
+        @NotNull List<String> requiredFragments,
         @Nullable Pair<String, VersionRange> fragmentHost,
         @Nullable Integer startLevel,
         @Nullable String requiredExecutionEnvironment
@@ -111,31 +110,31 @@ public class BundleInfo implements ModuleInfo {
         return path;
     }
 
-    public @Nonnull String getBundleName() {
+    public @NotNull String getBundleName() {
         return bundleName;
     }
 
-    public @Nonnull String getBundleVersion() {
+    public @NotNull String getBundleVersion() {
         return bundleVersion;
     }
 
-    public @Nonnull List<String> getClasspathLibs() {
+    public @NotNull List<String> getClasspathLibs() {
         return classpathLibs;
     }
 
-    public @Nonnull List<Pair<String, VersionRange>> getRequireBundles() {
+    public @NotNull List<Pair<String, VersionRange>> getRequireBundles() {
         return requireBundles;
     }
 
-    public @Nonnull Set<Pair<String, Version>> getExportPackages() {
+    public @NotNull Set<Pair<String, Version>> getExportPackages() {
         return exportPackages;
     }
 
-    public @Nonnull Set<String> getReexportedBundles() {
+    public @NotNull Set<String> getReexportedBundles() {
         return reexportedBundles;
     }
 
-    public @Nonnull Set<Pair<String, VersionRange>> getImportPackages() {
+    public @NotNull Set<Pair<String, VersionRange>> getImportPackages() {
         return importPackages;
     }
 
@@ -164,7 +163,7 @@ public class BundleInfo implements ModuleInfo {
         return additionalVersions;
     }
 
-    public void addAdditionalVersion(@Nonnull String version) {
+    public void addAdditionalVersion(@NotNull String version) {
         if (additionalVersions == null) {
             additionalVersions = version;
         } else {

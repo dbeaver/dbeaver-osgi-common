@@ -17,9 +17,9 @@
 package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.Result;
-import jakarta.annotation.Nonnull;
 import com.dbeaver.osgi.dependency.processing.resolvers.FeatureResolver;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import org.jkiss.code.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ class FeatureXmlReaderExtension extends XmlReaderExtension {
 
     private static final Logger log = LoggerFactory.getLogger(FeatureXmlReaderExtension.class);
 
-    static void resolveFeature(@Nonnull Result result, @Nonnull StartElement startElement, DependencyGraph graph) {
+    static void resolveFeature(@NotNull Result result, @NotNull StartElement startElement, DependencyGraph graph) {
         var attribute = startElement.getAttributeByName(ID_ATTR_NAME);
         if (attribute != null) {
             try {
@@ -44,8 +44,8 @@ class FeatureXmlReaderExtension extends XmlReaderExtension {
     }
 
     @Override
-    public void resolveStartElement(@Nonnull Result result,
-                                    @Nonnull StartElement startElement,
+    public void resolveStartElement(@NotNull Result result,
+                                    @NotNull StartElement startElement,
                                     XMLEventReader reader,
                                     DependencyGraph graph) {
         var nameLocalPart = startElement.getName().getLocalPart();

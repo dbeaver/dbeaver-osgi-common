@@ -17,9 +17,9 @@
 package com.dbeaver.osgi.dependency.processing.xml;
 
 import com.dbeaver.osgi.dependency.processing.Result;
-import jakarta.annotation.Nonnull;
 import com.dbeaver.osgi.dependency.processing.util.BundleUtils;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import org.jkiss.code.NotNull;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -36,7 +36,7 @@ abstract class XmlReaderExtension {
     private static final QName ARCH_ATTR_NAME = new QName("", "arch");
     protected static final QName PLUGIN_ATTR_NAME = new QName("", "plugin");
 
-    public static boolean matchesDeclaredOS(@Nonnull StartElement startElement) {
+    public static boolean matchesDeclaredOS(@NotNull StartElement startElement) {
         Attribute osAttr = startElement.getAttributeByName(OS_ATTR_NAME);
         Attribute wsAttr = startElement.getAttributeByName(WS_ATTR_NAME);
         Attribute archAttr = startElement.getAttributeByName(ARCH_ATTR_NAME);
@@ -49,8 +49,8 @@ abstract class XmlReaderExtension {
 
 
     public abstract void resolveStartElement(
-        @Nonnull Result result,
-        @Nonnull StartElement startElement,
+        @NotNull Result result,
+        @NotNull StartElement startElement,
         XMLEventReader reader,
         DependencyGraph graph
     ) throws XMLStreamException;

@@ -22,16 +22,14 @@ import com.dbeaver.osgi.dependency.processing.Result;
 import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.P2RepositoryManager;
 import com.dbeaver.osgi.dependency.processing.p2.RemoteP2Feature;
-import com.dbeaver.osgi.dependency.processing.util.FileUtils;
-import com.dbeaver.osgi.dependency.processing.xml.XmlReader;
-import jakarta.annotation.Nonnull;
-import org.jkiss.code.NotNull;
 import com.dbeaver.osgi.dependency.processing.util.BundleUtils;
 import com.dbeaver.osgi.dependency.processing.util.DependencyGraph;
+import com.dbeaver.osgi.dependency.processing.util.FileUtils;
+import com.dbeaver.osgi.dependency.processing.xml.XmlReader;
+import org.jkiss.code.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -40,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import javax.xml.stream.XMLStreamException;
 
 public class FeatureResolver {
     private final Lock lock = new ReentrantLock();
@@ -69,13 +68,14 @@ public class FeatureResolver {
     }
 
     public static void resolveFeatureDependencies(
-        @Nonnull Result result,
-        @Nonnull String bundleName,
+        @NotNull Result result,
+        @NotNull String bundleName,
         DependencyGraph graph
     ) throws IOException, XMLStreamException {
         if (result.isFeatureResolved(bundleName)) {
             return;
         }
+        System.out.println("\t\t-Process feature " + bundleName);
         DependencyGraph.DependencyNode previousNode = graph.addCurrentNodeDependencyAndTraverse(bundleName);
         try {
             var featuresFoldersPaths = PathsManager.INSTANCE.getFeaturesLocations();
@@ -140,9 +140,9 @@ public class FeatureResolver {
     }
 
     private static void parseFeatureFile(
-        @Nonnull Result result,
-        @Nonnull String bundleName,
-        @Nonnull File featureXmlFile,
+        @NotNull Result result,
+        @NotNull String bundleName,
+        @NotNull File featureXmlFile,
         DependencyGraph graph
     ) throws XMLStreamException, IOException {
         FeatureInfo currentFeature = getCurrentFeature(result.getProductPath());

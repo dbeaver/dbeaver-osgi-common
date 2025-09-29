@@ -16,7 +16,7 @@
  */
 package com.dbeaver.osgi.dependency.processing.resolvers;
 
-import jakarta.annotation.Nonnull;
+import org.jkiss.code.NotNull;
 
 import java.util.List;
 import java.util.Set;
@@ -49,7 +49,7 @@ public enum PackageChecker {
         "javax.crypto.interfaces"
     );
 
-    public boolean isPackageExcluded(@Nonnull String bundleName) {
+    public boolean isPackageExcluded(@NotNull String bundleName) {
         return excludedPackages.contains(bundleName) || excludedPackageGroups.stream().anyMatch(bundleName::startsWith);
     }
 }

@@ -21,11 +21,9 @@ import com.dbeaver.osgi.dependency.processing.BundleInfoBuilder;
 import com.dbeaver.osgi.dependency.processing.util.DependencyInformation;
 import com.dbeaver.osgi.dependency.processing.util.Version;
 import com.dbeaver.osgi.dependency.processing.util.VersionRange;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.jkiss.code.NotNull;
-
+import org.jkiss.code.Nullable;
 import org.jkiss.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +42,9 @@ public class ManifestParser {
     private static final Logger log = LoggerFactory.getLogger(ManifestParser.class);
     private static final Pattern VERSION_REGEX = Pattern.compile(".*(?:version|bundle-version)=\"([^\"]*)");
     public static @Nullable BundleInfo parseManifest(
-        @Nonnull Path pathToContainingFolderOrJar,
+        @NotNull Path pathToContainingFolderOrJar,
         @Nullable Integer startLevel,
-        @Nonnull Manifest manifest
+        @NotNull Manifest manifest
     ) {
         var attributes = manifest.getMainAttributes();
 
@@ -114,7 +112,7 @@ public class ManifestParser {
     }
 
     @NotNull
-    public static Set<String> parseReexportedBundles(@Nonnull Attributes attrs) {
+    public static Set<String> parseReexportedBundles(@NotNull Attributes attrs) {
         var requireBundlesArg = attrs.getValue("Require-Bundle");
         Stream<String> requiredBundlesStream;
         requiredBundlesStream = getBundlesStream(requireBundlesArg);
@@ -130,11 +128,11 @@ public class ManifestParser {
             .filter(ManifestParser::filterOptionalDependencies);
     }
 
-    private static boolean filterOptionalDependencies(@Nonnull String depString) {
+    private static boolean filterOptionalDependencies(@NotNull String depString) {
         return !depString.contains("resolution:=optional");
     }
 
-    public static @Nonnull String trimBundleName(@Nonnull String bundleName) {
+    public static @NotNull String trimBundleName(@NotNull String bundleName) {
         return StringUtils.substringBefore(bundleName, ";")
             .trim();
     }
@@ -161,7 +159,7 @@ public class ManifestParser {
         return new Pair<>(information.name(), information.version());
     }
 
-    public static @Nonnull List<String> parseBundleClasspath(@Nonnull Attributes attrs) {
+    public static @NotNull List<String> parseBundleClasspath(@NotNull Attributes attrs) {
         var bundleClassPathArg = attrs.getValue("Bundle-ClassPath");
         if (bundleClassPathArg == null) {
             return List.of();
