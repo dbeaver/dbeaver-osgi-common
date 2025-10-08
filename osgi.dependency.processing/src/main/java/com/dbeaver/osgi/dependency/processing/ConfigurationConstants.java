@@ -40,4 +40,9 @@ public class ConfigurationConstants {
 
     public static final Object MAVEN_MODULES = "mavenModules";
     public static final String ASSOCIATED_PROPERTIES = "associateProperties";
+    public static final String ASSOCIATED_ENV_PROPERTIES = "associateEnvProperties";
+
+    public static Object RUN_BEFORE_SCRIPTS = "runBeforeProductsLaunch";
+
+
 }

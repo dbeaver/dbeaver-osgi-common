@@ -53,9 +53,17 @@ public enum PathsManager {
     private Set<Path> excludePaths;
     private Path mavenRepoPath;
 
-    private Map<String, Set<String>> associatedProperties;
+    private Map<String, Path> overrideData = new HashMap<>();
 
-    private Map<String, Map<String, String>> propertyArray = new LinkedHashMap<>();
+    private Map<String, Set<String>> associatedProperties;
+    private Map<String, Set<String>> associatedEnvProperties;
+    /**
+     * Key - run configuration products uuid, value - list of names of other idea configs to run before launching configuration
+     */
+    private Map<String, Set<String>> runBeforeConfigs;
+
+    private Map<String, Map<String, String>> propertyValueMap = new LinkedHashMap<>();
+    private Map<String, Map<String, String>> envPropertyValueMap = new LinkedHashMap<>();
 
     public void init(
         @NotNull Properties settings,
@@ -70,7 +78,9 @@ public enum PathsManager {
 
         this.eclipsePath = eclipsePath;
         eclipsePluginsPath = eclipsePath.resolve(ConfigurationConstants.PLUGINS_FOLDER);
-
+        // TODO add parameter for that later
+        overrideData.put("com.dbeaver.product.ultimate.qa",
+            projectsFolderPath.resolve("../../dbeaver-qa-auto/auto-test/ui/swtbot-simple/target/auto-tests-workspace"));
 
         if (!eclipsePluginsPath.toFile().exists()) {
             Files.createDirectories(eclipsePluginsPath);
@@ -165,20 +175,10 @@ public enum PathsManager {
                 .map(projectsFolderPath::resolve).collect(Collectors.toSet());
             excludePaths.addAll(excludes);
         }
-        Object associatedPropertiesObject = settings.get(ConfigurationConstants.ASSOCIATED_PROPERTIES);
-        if (associatedPropertiesObject instanceof String properties) {
-            Stream<String> propertyStream = Arrays.stream(properties.split(";"))
-                .filter(it -> it.split("=").length == 2).map(String::trim);
-            this.associatedProperties = propertyStream.peek(productProperties -> {
-                    String values = productProperties.split("=")[1];
-                    Set<String> valuesSet = getSet(values);
-                    for (String s : valuesSet) {
-                        propertyArray.computeIfAbsent(s, prop -> loadNewProperty(prop, settings));
-                    }
-                }
-            ).collect(Collectors.toMap(it -> it.split("=")[0], it -> getSet(it.split("=")[1])));
-        }
-
+        associatedProperties = extractAssociatedProperties(settings, ConfigurationConstants.ASSOCIATED_PROPERTIES, propertyValueMap);
+        associatedEnvProperties = extractAssociatedProperties(settings, ConfigurationConstants.ASSOCIATED_ENV_PROPERTIES,
+            envPropertyValueMap
+        );
 
         var testBundlesPathsString = (String) settings.getOrDefault(ConfigurationConstants.TEST_BUNDLE_PATHS_PARAM, "");
         testBundlesPaths =
@@ -209,6 +209,50 @@ public enum PathsManager {
                 .collect(Collectors.toList());
         }
         this.projectsFolderPath = projectsFolderPath;
+        String runBeforeScriptsString = (String) settings.get(ConfigurationConstants.RUN_BEFORE_SCRIPTS);
+        if (runBeforeScriptsString != null) {
+            // uuid:path - Adds launch script for run configuration with uuid
+            runBeforeConfigs = Arrays.stream(runBeforeScriptsString.split(";"))
+                .map(String::trim)
+                .map(s -> s.split("="))
+                .filter(arr -> arr.length == 2)
+                .collect(Collectors.toMap(arr -> arr[0], arr -> Set.of(arr[1].split(","))));
+        }
+    }
+
+    public void associateAdditionalProperties(List<PropertyConfig> additionalProperties) {
+        for (PropertyConfig additionalProperty : additionalProperties) {
+            for (String uid : additionalProperty.uids()) {
+                if (additionalProperty.type() == PropertyConfig.Type.CLI) {
+                    associatedProperties.computeIfAbsent(uid, k -> new LinkedHashSet<>()).add(additionalProperty.name());
+                    propertyValueMap.put(additionalProperty.name(), additionalProperty.properties());
+                } else if (additionalProperty.type() == PropertyConfig.Type.ENV) {
+                    associatedEnvProperties.computeIfAbsent(uid, k -> new LinkedHashSet<>()).add(additionalProperty.name());
+                    envPropertyValueMap.put(additionalProperty.name(), additionalProperty.properties());
+                }
+            }
+
+        }
+    }
+
+    private Map<String, Set<String>> extractAssociatedProperties(
+        @NotNull Properties settings,
+        @NotNull String propertyType,
+        Map<String, Map<String, String>> associatedProperties
+    ) {
+        Object associatedPropertiesObject = settings.get(propertyType);
+        if (associatedPropertiesObject instanceof String properties) {
+            Stream<String> propertyStream = Arrays.stream(properties.split(";"))
+                .filter(it -> it.split("=").length == 2).map(String::trim);
+            return propertyStream.peek(productProperties -> {
+                String values = productProperties.split("=")[1];
+                Set<String> valuesSet = getSet(values);
+                for (String s : valuesSet) {
+                    associatedProperties.computeIfAbsent(s, prop -> loadNewProperty(prop, settings));
+                }
+            }).collect(Collectors.toMap(it -> it.split("=")[0], it -> getSet(it.split("=")[1])));
+        }
+        return null;
     }
 
     @NotNull
@@ -296,6 +340,11 @@ public enum PathsManager {
         return imlModules;
     }
 
+    @Nullable
+    public Set<String> getRunBeforeConfigs(String product) {
+        return runBeforeConfigs.get(product);
+    }
+
     @NotNull
     public Path getMavenRepoPath() {
         return mavenRepoPath;
@@ -327,7 +376,24 @@ public enum PathsManager {
         if (properties != null) {
             Map<String, String> result = new HashMap<>();
             for (String property : properties) {
-                Map<String, String> stringStringMap = propertyArray.get(property);
+                Map<String, String> stringStringMap = propertyValueMap.get(property);
+                result.putAll(stringStringMap);
+            }
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    public Map<String, String> getAssociatedEnvParameters(String product) {
+        if (associatedEnvProperties == null) {
+            return null;
+        }
+        Set<String> properties = associatedEnvProperties.get(product);
+        if (properties != null) {
+            Map<String, String> result = new HashMap<>();
+            for (String property : properties) {
+                Map<String, String> stringStringMap = envPropertyValueMap.get(property);
                 result.putAll(stringStringMap);
             }
             return result;
@@ -357,5 +423,9 @@ public enum PathsManager {
                 pair -> pair[1].trim()         // Value
             ));
 
+    }
+
+    public Path getOverridenDataFolderLocation(String productId) {
+        return overrideData.get(productId);
     }
 }
