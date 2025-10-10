@@ -45,4 +45,5 @@ public class ConfigurationConstants {
     public static Object RUN_BEFORE_SCRIPTS = "runBeforeProductsLaunch";
 
 
+    public static Object OVERRIDE_DATA_FOLDER = "overrideDataFolder";
 }

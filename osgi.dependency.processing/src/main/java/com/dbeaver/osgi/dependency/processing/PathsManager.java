@@ -78,9 +78,6 @@ public enum PathsManager {
 
         this.eclipsePath = eclipsePath;
         eclipsePluginsPath = eclipsePath.resolve(ConfigurationConstants.PLUGINS_FOLDER);
-        // TODO add parameter for that later
-        overrideData.put("com.dbeaver.product.ultimate.qa",
-            projectsFolderPath.resolve("../../dbeaver-qa-auto/auto-test/ui/swtbot-simple/target/auto-tests-workspace"));
 
         if (!eclipsePluginsPath.toFile().exists()) {
             Files.createDirectories(eclipsePluginsPath);
@@ -131,6 +128,23 @@ public enum PathsManager {
                 .filter(FileUtils::exists)
                 .collect(Collectors.toSet());
         }
+        String overrideDataString = (String) settings.getOrDefault(ConfigurationConstants.OVERRIDE_DATA_FOLDER, "");
+        if (overrideDataString != null) {
+            for (String pathString : overrideDataString.split(";")) {
+                String trim = pathString.trim();
+                if (trim.contains(":")) {
+                    String[] pathAndWorkDir = trim.split(":");
+                    if (pathAndWorkDir.length != 2) {
+                        continue;
+                    }
+                    Path productPath = projectsFolderPath.resolve(pathAndWorkDir[1]);
+                    if (FileUtils.exists(productPath)) {
+                        overrideData.put(pathAndWorkDir[0], productPath);
+                    }
+                }
+            }
+        }
+
         var bundlesPathsString = (String) settings.get(ConfigurationConstants.BUNDLES_PATHS_PARAM);
         bundlesPaths = Stream.concat(
                 Arrays.stream(bundlesPathsString.split(";"))
