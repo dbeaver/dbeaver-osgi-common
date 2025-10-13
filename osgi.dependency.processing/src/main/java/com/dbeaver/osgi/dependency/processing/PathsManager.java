@@ -189,7 +189,7 @@ public enum PathsManager {
                 .map(projectsFolderPath::resolve).collect(Collectors.toSet());
             excludePaths.addAll(excludes);
         }
-        associatedProperties = extractAssociatedProperties(settings, ConfigurationConstants.ASSOCIATED_PROPERTIES, propertyValueMap);
+        associatedProperties = extractAssociatedProperties(settings, ConfigurationConstants.ASSOCIATED_VM_PROPERTIES, propertyValueMap);
         associatedEnvProperties = extractAssociatedProperties(settings, ConfigurationConstants.ASSOCIATED_ENV_PROPERTIES,
             envPropertyValueMap
         );
@@ -382,7 +382,7 @@ public enum PathsManager {
     }
 
 
-    public Map<String, String> getAssociatedParameters(String product) {
+    public Map<String, String> getAssociatedVMParameters(String product) {
         if (associatedProperties == null) {
             return null;
         }
