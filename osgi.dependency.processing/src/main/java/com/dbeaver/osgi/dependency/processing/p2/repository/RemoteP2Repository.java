@@ -22,11 +22,11 @@ import com.dbeaver.osgi.dependency.processing.Artifact;
 import com.dbeaver.osgi.dependency.processing.PathsManager;
 import com.dbeaver.osgi.dependency.processing.p2.P2BundleLookupCache;
 import com.dbeaver.osgi.dependency.processing.p2.RemoteP2Feature;
-import com.dbeaver.osgi.dependency.processing.xml.ContentFileHandler;
-import com.dbeaver.osgi.dependency.processing.xml.IndexFileParser;
 import com.dbeaver.osgi.dependency.processing.p2.repository.exception.RepositoryInitialisationError;
 import com.dbeaver.osgi.dependency.processing.util.FileUtils;
+import com.dbeaver.osgi.dependency.processing.xml.ContentFileHandler;
 import com.dbeaver.osgi.dependency.processing.xml.ContentParserXmlExtension;
+import com.dbeaver.osgi.dependency.processing.xml.IndexFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -165,9 +165,12 @@ public class RemoteP2Repository implements IRepository<RemoteP2BundleInfo> {
             Path eclipsePath = PathsManager.INSTANCE.getEclipsePath();
             Path repositoryCache = eclipsePath.resolve("repositories")
                 .resolve(
-                    url.toString().replace('/', '_')
+                    url.getPath().replace('/', '_')
+                        .replace(":", "")
                         .replace("https:", "")
-                        .replace("http:", "") + "/"
+                        .replace("http:", "")
+                        .replace("file:", "")
+                        + "/"
                 );
             if (!repositoryCache.toFile().exists()) {
                 repositoryCache.toFile().mkdirs();
