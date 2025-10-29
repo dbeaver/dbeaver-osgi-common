@@ -130,17 +130,14 @@ public enum PathsManager {
         }
         String overrideDataString = (String) settings.getOrDefault(ConfigurationConstants.OVERRIDE_DATA_FOLDER, "");
         if (overrideDataString != null) {
-            for (String pathString : overrideDataString.split(";")) {
-                String trim = pathString.trim();
+            for (String pathString : overrideDataString.split(";")) {String trim = pathString.trim();
                 if (trim.contains(":")) {
                     String[] pathAndWorkDir = trim.split(":");
                     if (pathAndWorkDir.length != 2) {
                         continue;
                     }
                     Path productPath = projectsFolderPath.resolve(pathAndWorkDir[1]);
-                    if (FileUtils.exists(productPath)) {
                         overrideData.put(pathAndWorkDir[0], productPath);
-                    }
                 }
             }
         }
