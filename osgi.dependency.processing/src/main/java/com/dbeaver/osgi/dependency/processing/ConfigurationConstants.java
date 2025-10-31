@@ -39,5 +39,11 @@ public class ConfigurationConstants {
     public static final Object TEST_LIBRARIES = "testLibraries";
 
     public static final Object MAVEN_MODULES = "mavenModules";
-    public static final String ASSOCIATED_PROPERTIES = "associateProperties";
+    public static final String ASSOCIATED_VM_PROPERTIES = "associateVMProperties";
+    public static final String ASSOCIATED_ENV_PROPERTIES = "associateEnvProperties";
+
+    public static Object RUN_BEFORE_SCRIPTS = "runBeforeProductsLaunch";
+
+
+    public static Object OVERRIDE_DATA_FOLDER = "overrideDataFolder";
 }
