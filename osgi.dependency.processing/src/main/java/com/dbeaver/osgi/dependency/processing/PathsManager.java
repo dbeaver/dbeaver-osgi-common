@@ -60,7 +60,7 @@ public enum PathsManager {
     /**
      * Key - run configuration products uuid, value - list of names of other idea configs to run before launching configuration
      */
-    private Map<String, Set<String>> runBeforeConfigs;
+    private Map<String, Set<String>> runBeforeConfigs = null;
 
     private Map<String, Map<String, String>> propertyValueMap = new LinkedHashMap<>();
     private Map<String, Map<String, String>> envPropertyValueMap = new LinkedHashMap<>();
