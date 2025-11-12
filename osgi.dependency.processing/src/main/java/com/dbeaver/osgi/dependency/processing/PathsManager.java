@@ -353,6 +353,9 @@ public enum PathsManager {
 
     @Nullable
     public Set<String> getRunBeforeConfigs(String product) {
+        if (runBeforeConfigs == null) {
+            return null;
+        }
         return runBeforeConfigs.get(product);
     }
 
