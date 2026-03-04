@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ public enum PathsManager {
 
     private Collection<Path> featuresPaths;
     private Collection<Path> bundlesPaths;
+    private Collection<Path> openSourceReposPaths;
     private Map<Path, String> productsPathsAndWorkDirs;
     private Collection<Path> testBundlesPaths;
 
@@ -154,6 +155,14 @@ public enum PathsManager {
             )
             .filter(FileUtils::exists)
             .collect(Collectors.toList());
+
+        var openSourceReposPathsString = settings.getProperty(ConfigurationConstants.OPENSOURCE_REPOS_PARAM, "");
+        openSourceReposPaths = Arrays.stream(openSourceReposPathsString.split(";"))
+            .map(String::trim)
+            .map(projectsFolderPath::resolve)
+            .filter(FileUtils::exists)
+            .collect(Collectors.toList());
+
         var productsPathsString = (String) settings.get(ConfigurationConstants.PRODUCTS_PATHS_PARAM);
         productsPathsAndWorkDirs = resolveRootPaths(projectsFolderPath, productsPathsString);
         Stream<Path> allModules = Stream.concat(Arrays.stream(bundlesPathsString.split(";"))
@@ -306,6 +315,11 @@ public enum PathsManager {
 
     public @NotNull Collection<Path> getBundlesLocations() {
         return bundlesPaths;
+    }
+
+    @NotNull
+    public Collection<Path> getOpenSourceReposPaths() {
+        return openSourceReposPaths;
     }
 
     public @NotNull Collection<Path> getTestBundlesPaths() {
