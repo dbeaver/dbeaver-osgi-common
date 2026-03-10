@@ -56,9 +56,12 @@ public class P2RepositoryManager {
         try {
             for (String s : repositories) {
                 String trim = s.trim();
+                if (!trim.endsWith("\\") && !trim.endsWith("/")) {
+                    trim += "/"; // add trailing slash
+                }
                 URI uri = new URI(trim);
-                if (uri.getScheme() == null || !(uri.getScheme().equals("https") || uri.getScheme().equals("http") || uri.getScheme()
-                    .equals("file"))) {
+                if (uri.getScheme() == null || !(uri.getScheme().equals("https") || uri.getScheme().equals("http")
+                    || uri.getScheme().equals("file"))) {
                     // assume local file and add file scheme
                     uri = new URI("file:///" + trim);
                 }
