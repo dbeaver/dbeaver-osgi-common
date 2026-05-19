@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,20 +26,18 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 
 class FeatureXmlReaderExtension extends XmlReaderExtension {
 
     private static final Logger log = LoggerFactory.getLogger(FeatureXmlReaderExtension.class);
 
-    static void resolveFeature(@NotNull Result result, @NotNull StartElement startElement, DependencyGraph graph) {
-        var attribute = startElement.getAttributeByName(ID_ATTR_NAME);
-        if (attribute != null) {
-            try {
-                FeatureResolver.resolveFeatureDependencies(result, attribute.getValue(), graph);
-            } catch (IOException | XMLStreamException e) {
-                log.error("Failed to resolve feature", e);
-            }
+    static void resolveFeature(@NotNull Result result, @NotNull Attribute attribute, DependencyGraph graph) {
+        try {
+            FeatureResolver.resolveFeatureDependencies(result, attribute.getValue(), graph);
+        } catch (IOException | XMLStreamException e) {
+            log.error("Failed to resolve feature", e);
         }
     }
 
@@ -49,8 +47,20 @@ class FeatureXmlReaderExtension extends XmlReaderExtension {
                                     XMLEventReader reader,
                                     DependencyGraph graph) {
         var nameLocalPart = startElement.getName().getLocalPart();
-        if (nameLocalPart.equals("includes") || nameLocalPart.equals("feature")) {
-            resolveFeature(result, startElement, graph);
+        Attribute attribute = null;
+        switch (nameLocalPart) {
+            case "import": {
+                attribute = startElement.getAttributeByName(FEATURE_ATTR_NAME);
+                break;
+            }
+            case "includes", "feature": {
+                attribute = startElement.getAttributeByName(ID_ATTR_NAME);
+                break;
+            }
         }
+        if (attribute == null) {
+            return;
+        }
+        resolveFeature(result, attribute, graph);
     }
 }
