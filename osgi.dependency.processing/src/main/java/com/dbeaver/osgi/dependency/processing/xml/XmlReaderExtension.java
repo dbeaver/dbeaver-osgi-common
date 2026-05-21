@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ abstract class XmlReaderExtension {
     protected static final QName START_LEVEL_ATTR_NAME = new QName("", "startLevel");
     private static final QName ARCH_ATTR_NAME = new QName("", "arch");
     protected static final QName PLUGIN_ATTR_NAME = new QName("", "plugin");
+    protected static final QName FEATURE_ATTR_NAME = new QName("", "feature");
 
     public static boolean matchesDeclaredOS(@NotNull StartElement startElement) {
         Attribute osAttr = startElement.getAttributeByName(OS_ATTR_NAME);
