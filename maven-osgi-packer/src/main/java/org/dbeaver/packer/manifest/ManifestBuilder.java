@@ -1,3 +1,19 @@
+/*
+ * DBeaver - Universal Database Manager
+ * Copyright (C) 2010-2026 DBeaver Corp and others
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.dbeaver.packer.manifest;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -20,7 +36,8 @@ public class ManifestBuilder {
         String moduleVersion,
         List<Path> classpaths,
         Path basedir,
-        Path fragPath
+        Path fragPath,
+        String mergedServiceComponent
     ) throws MojoExecutionException {
 
         StringBuilder manifest = new StringBuilder();
@@ -99,13 +116,43 @@ public class ManifestBuilder {
                 }
             }
         }
-        manifest.append("\n");
-        // dependencies, extract parameters from fragPath .MF file\
-        manifest.append("\n");
+
+        processServiceComponent(mergedServiceComponent, manifest);
         return manifest.toString();
     }
 
-    public static String getDefaultBuildProperties() {
+    private static void processServiceComponent(String mergedServiceComponent, StringBuilder manifest) {
+        if (mergedServiceComponent != null && !mergedServiceComponent.isBlank()) {
+            List<String> parts = splitByCommaOutsideQuotes(mergedServiceComponent);
+            boolean first = true;
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                if (first) {
+                    manifest.append("Service-Component: \n ").append(trimmed);
+                    first = false;
+                } else {
+                    manifest.append(",\n ").append(trimmed);
+                }
+            }
+            if (!first) {
+                manifest.append("\n");
+            }
+        }
+    }
+
+    public static String getDefaultBuildProperties(boolean includeOsgiInf) {
+        if (includeOsgiInf) {
+            return """
+                source.. =
+                bin.includes = META-INF/,\\
+                               OSGI-INF/,\\
+                               lib/
+                src.includes = META-INF/
+                """;
+        }
         return """
             source.. =
             bin.includes = META-INF/,\\
@@ -119,6 +166,9 @@ public class ManifestBuilder {
         try (FileInputStream fos = new FileInputStream(fragPath.toFile())) {
             Manifest mf = new Manifest(fos);
             mf.getMainAttributes().forEach((key, value) -> {
+                if (key.toString().equals("X-Copy-Services")) {
+                    return;
+                }
                 if (key.toString().startsWith("Export-Package")) {
                     hasExportPackage[0] = true;
                 }

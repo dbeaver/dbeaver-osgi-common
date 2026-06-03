@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2025 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,11 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -100,6 +102,7 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
             Path targetLib = bundlePath.resolve("lib");
             Files.createDirectories(targetLib);
             transferAndIndexLibraries(basedir, targetLib, classpathList);
+            String mergedServiceComponent = processCopyServices(fragPath, bundlePath, targetLib);
             writeManifest(
                 targetBundleId,
                 targetBundleId,
@@ -107,9 +110,10 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                 classpathList,
                 basedir,
                 fragPath,
-                manifestPath
+                manifestPath,
+                mergedServiceComponent
             );
-            writeBuildProperties(bundlePath);
+            writeBuildProperties(bundlePath, mergedServiceComponent != null);
             writePOM(bundlePath, parseResult, basedir);
 
         } catch (IOException | ParserConfigurationException | SAXException e) {
@@ -183,10 +187,10 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         }
     }
 
-    private static void writeBuildProperties(Path bundlePath) throws IOException {
+    private static void writeBuildProperties(Path bundlePath, boolean includeOsgiInf) throws IOException {
         Path buildProperties = bundlePath.resolve("build.properties");
         Files.createFile(buildProperties);
-        Files.write(buildProperties, ManifestBuilder.getDefaultBuildProperties().getBytes());
+        Files.write(buildProperties, ManifestBuilder.getDefaultBuildProperties(includeOsgiInf).getBytes());
     }
 
     private static void writeManifest(
@@ -196,7 +200,8 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
         List<Path> classpathList,
         Path basedir,
         Path fragPath,
-        Path manifestPath
+        Path manifestPath,
+        String mergedServiceComponent
     ) throws IOException, MojoExecutionException {
         String builtManifest =
             ManifestBuilder.buildManifest(
@@ -205,10 +210,85 @@ public class MavenOSGIFragmentPacker extends AbstractMojo {
                 moduleVersion,
                 classpathList,
                 basedir,
-                fragPath
+                fragPath,
+                mergedServiceComponent
             );
         Files.createFile(manifestPath);
         Files.write(manifestPath, builtManifest.getBytes());
+    }
+
+    private static String processCopyServices(Path fragPath, Path bundlePath, Path libDir)
+        throws IOException, MojoExecutionException
+    {
+        List<String> artifacts;
+        try (InputStream is = Files.newInputStream(fragPath)) {
+            String header = new Manifest(is).getMainAttributes().getValue("X-Copy-Services");
+            if (header == null || header.isBlank()) {
+                return null;
+            }
+            artifacts = Arrays.stream(header.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+        }
+        if (artifacts.isEmpty()) {
+            return null;
+        }
+        Path osgiInf = Files.createDirectories(bundlePath.resolve("OSGI-INF"));
+        Set<String> components = new LinkedHashSet<>();
+
+        for (String artifact : artifacts) {
+            Path jar = findArtifactJar(libDir, artifact);
+            if (jar == null) {
+                throw new MojoExecutionException(
+                    "X-Copy-Services: jar not found for artifact '" + artifact + "' in " + libDir);
+            }
+            try (JarFile jf = new JarFile(jar.toFile())) {
+                Enumeration<JarEntry> entries = jf.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (entry.isDirectory() || !name.startsWith("OSGI-INF/")) {
+                        continue;
+                    }
+                    Path dst = osgiInf.resolve(name.substring("OSGI-INF/".length()));
+                    Path parent = dst.getParent();
+                    if (parent != null) {
+                        Files.createDirectories(parent);
+                    }
+                    try (InputStream in = jf.getInputStream(entry)) {
+                        Files.copy(in, dst, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
+                Manifest jarManifest = jf.getManifest();
+                if (jarManifest != null) {
+                    String sc = jarManifest.getMainAttributes().getValue("Service-Component");
+                    if (sc != null) {
+                        for (String token : sc.split(",")) {
+                            String t = token.trim();
+                            if (!t.isEmpty()) {
+                                components.add(t);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return components.isEmpty() ? null : String.join(",", components);
+    }
+
+    private static Path findArtifactJar(Path libDir, String artifact) throws IOException {
+        try (Stream<Path> stream = Files.list(libDir)) {
+            return stream
+                .filter(Files::isRegularFile)
+                .filter(p -> {
+                    String n = p.getFileName().toString();
+                    return n.startsWith(artifact)
+                        && n.endsWith(".jar");
+                })
+                .findFirst()
+                .orElse(null);
+        }
     }
 
     private static void writePOM(Path bundlePath, ParseResult parseResult, Path basedir) throws IOException {
