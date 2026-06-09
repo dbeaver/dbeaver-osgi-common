@@ -5,6 +5,6 @@ Bundle-Vendor: DBeaver Corp
 Bundle-SymbolicName: com.dbeaver.maven.p2.collector
 Bundle-Version: 1.0.0.qualifier
 Bundle-Release-Date: 20240205
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: com.dbeaver
 Automatic-Module-Name: com.dbeaver.maven.p2.collector
