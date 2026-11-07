@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class ConfigurationConstants {
 
     public static final String PLUGINS_FOLDER = "plugins";
 
-    public static final String DEFAULT_WORKSPACE_LOCATION = "dbeaver-workspace/dependencies/";
+    public static final String DEFAULT_WORKSPACE_LOCATION = ".workspace/dependencies/";
     public static final String TREE_OUTPUT = "tree-output";
 
     public static final String FEATURES_FOLDER = "features";
