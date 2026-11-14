@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,6 +91,19 @@ public class PluginResolver {
         List<BundleInfo> bundleInfos = new ArrayList<>();
         for (Path pluginsFoldersPath : pluginsFoldersPaths) {
             var correctedFolderName = correctFolderName(bundleInfo.getFirst());
+            // Explicit bundle paths override downloaded binaries without exposing sibling bundles.
+            if (pluginsFoldersPath.getFileName().toString().equals(correctedFolderName)
+                && Files.isRegularFile(pluginsFoldersPath.resolve(MANIFEST_PATH))) {
+                BundleInfo info = extractBundleInfo(pluginsFoldersPath.toFile(), startLevel);
+                if (info != null && VersionRange.isVersionsCompatible(bundleInfo.getSecond(), new Version(info.getBundleVersion()))) {
+                    parseBundleInfo(result, info, cache, graph);
+                    if (currentFeature != null) {
+                        currentFeature.addBundleDependency(info);
+                    }
+                    return;
+                }
+                continue;
+            }
             File pluginJarOrFolder = FileUtils.findFirstChildByPackageName(pluginsFoldersPath, correctedFolderName);
             if (pluginJarOrFolder != null) {
                 BundleInfo info = extractBundleInfo(pluginJarOrFolder, startLevel);
