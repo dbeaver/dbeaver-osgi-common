@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2026 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,15 @@ import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2BundleInfo;
 import com.dbeaver.osgi.dependency.processing.p2.repository.RemoteP2Repository;
 import com.dbeaver.osgi.dependency.processing.p2.repository.exception.RepositoryInitialisationError;
 import com.dbeaver.osgi.dependency.processing.xml.ContentParserXmlExtension;
+import org.jkiss.code.NotNull;
+import org.jkiss.code.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -38,8 +41,12 @@ public class P2RepositoryManager {
     private List<IRepository<?>> rootRepositories;
     private final P2BundleLookupCache cache = new P2BundleLookupCache();
 
-    public void init(Properties settings, String eclipseVersion, ContentParserXmlExtension extension) throws RepositoryInitialisationError {
-        String repositoriesString = (String) settings.get("repositories");
+    public void init(
+        @NotNull Properties settings,
+        @NotNull String eclipseVersion,
+        @Nullable ContentParserXmlExtension extension
+    ) throws RepositoryInitialisationError {
+        String repositoriesString = resolveLocalRepositories(settings.getProperty("repositories"), System.getenv("DBEAVER_DEV_HOME"));
         String reposititoryString = repositoriesString.replace(
             "${eclipse-version}",
                 eclipseVersion);
@@ -49,6 +56,22 @@ public class P2RepositoryManager {
             log.info("Indexing " + repository.getName() + " repository...");
             repository.init(cache, extension);
         }
+    }
+
+    @NotNull
+    static String resolveLocalRepositories(@NotNull String repositoriesString, @Nullable String devHome)
+        throws RepositoryInitialisationError {
+        String localRepositoryPrefix = "file:${env.DBEAVER_DEV_HOME}/";
+        if (repositoriesString.contains(localRepositoryPrefix)) {
+            if (devHome == null || devHome.isBlank()) {
+                throw new RepositoryInitialisationError("Set DBEAVER_DEV_HOME to the parent directory of the local dependency repositories");
+            }
+            // Convert the path to a URI to support spaces and Windows path separators.
+            String devHomeUri = Path.of(devHome).toAbsolutePath().toUri().toString();
+            repositoriesString = repositoriesString.replace(
+                localRepositoryPrefix, devHomeUri.endsWith("/") ? devHomeUri : devHomeUri + "/");
+        }
+        return repositoriesString;
     }
 
     private void indexRepositories(String[] repositories) throws RepositoryInitialisationError {
